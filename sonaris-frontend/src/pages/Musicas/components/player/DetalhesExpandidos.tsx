@@ -12,7 +12,7 @@ interface IDetalhesExpandidos {
 
 export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, track }: IDetalhesExpandidos) {
     return (
-        <div className="border-b border-slate-200 dark:border-slate-700">
+        <div className="border-b border-slate-200 dark:border-slate-700 flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="flex flex-col sm:flex-row gap-6 sm:items-start">
                     <Capa capaUrl={capaUrl} grande />
