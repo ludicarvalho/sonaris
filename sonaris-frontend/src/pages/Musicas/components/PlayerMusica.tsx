@@ -92,7 +92,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                 />
             )}
 
-            <div className="px-4 py-3 flex items-center gap-4">
+            <div className="px-4 py-3 grid grid-cols-[1fr_clamp(320px,40vw,32rem)_1fr] items-center gap-4">
                 <BlocoEsquerda
                     capaUrl={capaUrl}
                     titulo={titulo}
