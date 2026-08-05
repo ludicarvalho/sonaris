@@ -21,7 +21,7 @@ services:
       context: ./sonaris-frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:5033}
+        - VITE_API_URL=${VITE_API_URL:-}
     ports:
       - "${FRONTEND_PORT:-3003}:5173"
     depends_on:

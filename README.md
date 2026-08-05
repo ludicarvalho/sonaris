@@ -53,7 +53,7 @@ cp .env.example .env
 
 | Variável       | Padrão              | Descrição                                             |
 | -------------- | ------------------- | ----------------------------------------------------- |
-| `VITE_API_URL` | `http://localhost:5033` | URL que o frontend (browser) usa para chamar a API |
+| `VITE_API_URL` | *(vazio)*           | URL da API. **Vazio = mesma origem** (o nginx do frontend faz proxy do `/api` para o backend) |
 | `MUSIC_PATH`   | `/home/luiz/Músicas` | Pasta no host com a coleção de MP3 |
 | `BACKEND_PORT` | `5033`              | Porta do host para a API |
 | `FRONTEND_PORT`| `3003`              | Porta do host para o frontend |
@@ -75,13 +75,11 @@ Endpoints disponíveis (prefixo `/api/Musica`):
 
 O endpoint de stream suporta requisições com header `Range` (respostas HTTP 206).
 
-### Apontando o frontend para outra API
+### Como a API é acessada
 
-A URL da API é definida no build do frontend pelo argumento `VITE_API_URL`. Altere o `.env` (variável `VITE_API_URL`) e recrie o container:
+O nginx do container do frontend faz **proxy** de todas as chamadas `/api/*` para o backend (serviço `sonaris-backend:7071`). Por isso o `VITE_API_URL` fica **vazio** por padrão: o browser chama a mesma origem do frontend e funciona em qualquer máquina, sem configurar IP. O backend também continua exposto na porta do host (`BACKEND_PORT`) para acesso direto (Swagger, testes).
 
-```bash
-docker compose up -d --build sonaris-frontend
-```
+Só use uma URL completa no `VITE_API_URL` se estiver servindo o frontend sem o proxy (ex.: Vite em dev, apontando direto para a API).
 
 ## Desenvolvimento local
 
