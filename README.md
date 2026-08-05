@@ -5,7 +5,7 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 ## Stack
 
 - **Backend**: ASP.NET Core 8 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG e extração de capa (embutida na ID3v2 ou imagem no diretório).
-- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa, volume e atalhos de teclado.
+- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa (embutida ou imagem da pasta), volume, atalhos de teclado, layout responsivo e detalhes expansíveis (o botão Voltar do navegador fecha os detalhes no mobile).
 - **Infra**: Docker Compose (backend + nginx servindo o frontend).
 
 ## Estrutura
