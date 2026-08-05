@@ -81,7 +81,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
     const artistaAlbum = [metadata?.Artist, metadata?.Album].filter(Boolean).join(" • ");
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] flex flex-col max-h-[100vh]">
             {expandido && (
                 <DetalhesExpandidos
                     capaUrl={capaUrl}
@@ -92,7 +92,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                 />
             )}
 
-            <div className="px-4 py-3 grid grid-cols-[1fr_clamp(320px,40vw,32rem)_1fr] items-center gap-4">
+            <div className="px-4 py-3 grid grid-cols-[minmax(0,1fr)_clamp(180px,40vw,32rem)_minmax(0,1fr)] items-center gap-4 shrink-0">
                 <BlocoEsquerda
                     capaUrl={capaUrl}
                     titulo={titulo}

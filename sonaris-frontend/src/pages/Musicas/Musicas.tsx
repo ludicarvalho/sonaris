@@ -7,7 +7,7 @@ import { BreadcrumbMusicas } from './components/BreadcrumbMusicas';
 import { ListaMusicas } from './components/ListaMusicas';
 import { PlayerMusica } from './components/PlayerMusica';
 import { usePageTitle } from '../../hooks/usePageTitle';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/useTheme';
 
 const PAGE_SIZE = 30;
 
