@@ -1,0 +1,3 @@
+export const btnControle = "flex items-center justify-center w-8 h-8 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shrink-0 disabled:opacity-40 disabled:hover:text-slate-500 disabled:dark:hover:text-slate-400 disabled:hover:bg-transparent disabled:dark:hover:bg-transparent disabled:cursor-not-allowed";
+
+export const btnExtra = "flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0";

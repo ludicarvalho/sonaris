@@ -4,7 +4,7 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 
 ## Stack
 
-- **Backend**: ASP.NET Core 8 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG e extração de capa embutida.
+- **Backend**: ASP.NET Core 8 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG e extração de capa (embutida na ID3v2 ou imagem no diretório).
 - **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa, volume e atalhos de teclado.
 - **Infra**: Docker Compose (backend + nginx servindo o frontend).
 
@@ -74,6 +74,15 @@ Endpoints disponíveis (prefixo `/api/Musica`):
 | Capa         | GET    | `/api/Musica/StreamCapa?fileName=<caminho.mp3>`         |
 
 O endpoint de stream suporta requisições com header `Range` (respostas HTTP 206).
+
+### Capa da música
+
+A capa é buscada na ordem:
+
+1. **Imagem embutida** na tag ID3v2 da própria música.
+2. Se não houver, uma **imagem no mesmo diretório** da música — a primeira encontrada entre `.jpg`, `.jpeg` e `.png` (ex.: `folder.jpg`).
+
+Se nenhuma imagem for encontrada, o endpoint retorna erro 400 (`Capa não encontrada`).
 
 ### Como a API é acessada
 
