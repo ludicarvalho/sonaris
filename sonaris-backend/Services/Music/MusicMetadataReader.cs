@@ -62,11 +62,46 @@ public class MusicMetadataReader : IMusicMetadataReader
 
             Id3v2Tag tag = id3v2TagParser.Read(reader);
 
-            return tag?.GetPictureFrame();
+            MusicCover? capa = tag?.GetPictureFrame();
+
+            if (capa is not null)
+                return capa;
+
+            return RetornarCapaDoDiretorio(absolutePath);
         }
         catch (Exception ex)
         {
             throw new SonarisException("Erro ao tentar ler a capa da música.", ex);
         }
     }
+
+    /// <summary>
+    /// Procura por uma imagem (.jpg, .jpeg, .png) no mesmo diretório da música
+    /// e a usa como capa quando a tag ID3v2 não possui imagem embutida.
+    /// </summary>
+    private MusicCover RetornarCapaDoDiretorio(string absolutePath)
+    {
+        var diretorio = Path.GetDirectoryName(absolutePath);
+
+        if (string.IsNullOrEmpty(diretorio) || !Directory.Exists(diretorio))
+            return null;
+
+        var imagem = Directory.EnumerateFiles(diretorio, "*.*")
+            .Where(arquivo => CapaImageExtensions.Contains(Path.GetExtension(arquivo), StringComparer.OrdinalIgnoreCase))
+            .OrderBy(arquivo => arquivo, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+
+        if (imagem is null)
+            return null;
+
+        string mimeType = Path.GetExtension(imagem).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            _ => "image/jpeg"
+        };
+
+        return new MusicCover(mimeType, System.IO.File.ReadAllBytes(imagem));
+    }
+
+    private static readonly string[] CapaImageExtensions = [".jpg", ".jpeg", ".png"];
 }
