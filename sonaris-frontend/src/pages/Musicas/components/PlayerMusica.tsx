@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Music2, Pause, Play, SkipBack, SkipForward, Volume1, Volume2, VolumeX, X } from "lucide-react";
+import { Music2, Pause, Play, SkipBack, SkipForward, Volume1, Volume2, VolumeX, X } from "lucide-react";
 import { getCapaMusica, getMusicaMetadata, streamUrl } from "../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../types";
 import { removerExensaoArquivo } from "../../../utils/text";
@@ -231,48 +231,54 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
             {expandido && (
-                <div className="max-w-4xl mx-auto px-4 py-6 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex flex-col sm:flex-row gap-6 sm:items-start">
-                        {capaGrande}
-                        <div className="min-w-0 flex-1">
-                            <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">Agora tocando</p>
-                            <h2 className="text-2xl font-bold mt-1 truncate">{titulo}</h2>
-                            <p className="text-slate-400 dark:text-slate-500 truncate">{artistaAlbum}</p>
+                <div className="border-b border-slate-200 dark:border-slate-700">
+                    <div className="max-w-4xl mx-auto px-4 py-6">
+                        <div className="flex flex-col sm:flex-row gap-6 sm:items-start">
+                            {capaGrande}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">Agora tocando</p>
+                                <h2 className="text-2xl font-bold mt-1 truncate">{titulo}</h2>
+                                <p className="text-slate-400 dark:text-slate-500 truncate">{artistaAlbum}</p>
 
-                            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5 text-sm">
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Álbum</dt>
-                                    <dd className="font-medium truncate" title={metadata?.Album ?? ''}>{metadata?.Album || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Faixa</dt>
-                                    <dd className="font-medium">{metadata?.Track || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Ano</dt>
-                                    <dd className="font-medium">{metadata?.Year || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Duração</dt>
-                                    <dd className="font-medium">{formatarDuracao(metadata?.Duration ?? null) || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Bitrate</dt>
-                                    <dd className="font-medium">{metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Tamanho</dt>
-                                    <dd className="font-medium">{formatarTamanho(track.Size)}</dd>
-                                </div>
-                            </dl>
+                                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5 text-sm">
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Álbum</dt>
+                                        <dd className="font-medium truncate" title={metadata?.Album ?? ''}>{metadata?.Album || '—'}</dd>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Faixa</dt>
+                                        <dd className="font-medium">{metadata?.Track || '—'}</dd>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Ano</dt>
+                                        <dd className="font-medium">{metadata?.Year || '—'}</dd>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Duração</dt>
+                                        <dd className="font-medium">{formatarDuracao(metadata?.Duration ?? null) || '—'}</dd>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Bitrate</dt>
+                                        <dd className="font-medium">{metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'}</dd>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+                                        <dt className="text-xs text-slate-400">Tamanho</dt>
+                                        <dd className="font-medium">{formatarTamanho(track.Size)}</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
             <div className="px-4 py-3 flex items-center gap-4">
-                {/* Bloco esquerdo: capa + dados da música (colado à esquerda) */}
-                <div className="flex items-center gap-3 min-w-0">
+                {/* Bloco esquerdo: capa + dados da música (colado à esquerda, clique expande/recolhe) */}
+                <div
+                    onClick={() => setExpandido(v => !v)}
+                    title={expandido ? "Recolher detalhes" : "Expandir detalhes"}
+                    className="flex items-center gap-3 min-w-0 cursor-pointer select-none"
+                >
                     {capaPequena}
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{titulo}</p>
@@ -367,13 +373,6 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                         className={btnExtra}
                     >
                         <X size={18} />
-                    </button>
-                    <button
-                        onClick={() => setExpandido(v => !v)}
-                        title={expandido ? "Recolher detalhes" : "Expandir detalhes"}
-                        className={btnExtra}
-                    >
-                        {expandido ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                     </button>
                 </div>
             </div>
