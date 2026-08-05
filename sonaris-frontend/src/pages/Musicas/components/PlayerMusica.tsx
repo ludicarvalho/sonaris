@@ -213,14 +213,6 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
 
     const titulo = metadata?.Title || removerExensaoArquivo(track.Name);
     const artistaAlbum = [metadata?.Artist, metadata?.Album].filter(Boolean).join(" • ");
-    const detalhes = [
-        metadata ? formatarDuracao(metadata.Duration) : "",
-        metadata?.Bitrate ? `${metadata.Bitrate} kbps` : "",
-        metadata?.Year || "",
-    ]
-        .filter(Boolean)
-        .join(" • ");
-
     const capaPequena = capaUrl
         ? <img src={capaUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
         : <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white shrink-0">
@@ -232,6 +224,9 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
         : <div className="w-full sm:w-56 h-56 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shrink-0">
             <Music2 size={40} />
         </div>;
+
+    const btnControle = "flex items-center justify-center w-8 h-8 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shrink-0 disabled:opacity-40 disabled:hover:text-slate-500 disabled:dark:hover:text-slate-400 disabled:hover:bg-transparent disabled:dark:hover:bg-transparent disabled:cursor-not-allowed";
+    const btnExtra = "flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0";
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
@@ -275,131 +270,136 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                 </div>
             )}
 
-            <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-                <div className="flex items-center gap-2 min-w-0">
+            <div className="px-4 py-3 flex items-center gap-4">
+                {/* Bloco esquerdo: capa + dados da música (colado à esquerda) */}
+                <div className="flex items-center gap-3 min-w-0">
                     {capaPequena}
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{titulo}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                             {artistaAlbum || track.RelativePath}
                         </p>
-                        {detalhes && (
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{detalhes}</p>
-                        )}
                     </div>
                 </div>
 
-                <audio
-                    ref={audioRef}
-                    autoPlay
-                    onPlay={() => setTocando(true)}
-                    onPause={() => setTocando(false)}
-                    onEnded={() => {
-                        setTocando(false);
-                        if (hasNext) onNext();
-                    }}
-                    onTimeUpdate={atualizarTempo}
-                    onLoadedMetadata={aoCarregarDuracao}
-                    onProgress={atualizarBuffer}
-                    onVolumeChange={() => {
-                        const audio = audioRef.current;
-                        if (!audio) return;
-                        setVolume(audio.volume);
-                        setMudo(audio.muted);
-                        localStorage.setItem(VOLUME_KEY, String(audio.volume));
-                        localStorage.setItem(MUTE_KEY, audio.muted ? '1' : '0');
-                    }}
-                    className="hidden"
-                />
-
-                <div className="flex items-center gap-3 flex-1 min-w-0 shrink-0">
-                    <button
-                        onClick={onPrev}
-                        disabled={!hasPrev}
-                        title="Faixa anterior"
-                        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 disabled:opacity-40 disabled:hover:text-slate-500 disabled:dark:hover:text-slate-400 disabled:hover:bg-transparent disabled:dark:hover:bg-transparent disabled:cursor-not-allowed"
-                    >
-                        <SkipBack size={18} />
-                    </button>
-
-                    <button
-                        onClick={alternarPlayPause}
-                        title={tocando ? "Pausar" : "Reproduzir"}
-                        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0"
-                    >
-                        {tocando ? <Pause size={18} /> : <Play size={18} />}
-                    </button>
-
-                    <button
-                        onClick={onNext}
-                        disabled={!hasNext}
-                        title="Próxima faixa"
-                        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 disabled:opacity-40 disabled:hover:text-slate-500 disabled:dark:hover:text-slate-400 disabled:hover:bg-transparent disabled:dark:hover:bg-transparent disabled:cursor-not-allowed"
-                    >
-                        <SkipForward size={18} />
-                    </button>
-
-                    <div
-                        onClick={buscarPosicao}
-                        title="Buscar posição"
-                        className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer"
-                    >
-                        <div
-                            className="absolute inset-y-0 left-0 rounded-full bg-slate-400 dark:bg-slate-500"
-                            style={{ width: `${buffer}%` }}
-                        />
-                        <div
-                            className="absolute inset-y-0 left-0 rounded-full bg-blue-600"
-                            style={{ width: `${progresso}%` }}
-                        />
-                        <div
-                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-600 border-2 border-white dark:border-slate-800 shadow"
-                            style={{ left: `calc(${progresso}% - 6px)` }}
-                        />
-                    </div>
-
-                    <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap tabular-nums shrink-0">
-                        {formatarTempo(tempoAtual)} / {formatarTempo(tempoTotal)}
-                    </span>
-
-                    <div className="flex items-center gap-2 shrink-0">
+                {/* Bloco central: controles (ocupa o meio) */}
+                <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={alternarMudo}
-                            title={mudo || volume === 0 ? "Ativar som" : "Mudo"}
-                            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            onClick={onPrev}
+                            disabled={!hasPrev}
+                            title="Faixa anterior"
+                            className={btnControle}
                         >
-                            {mudo || volume === 0 ? <VolumeX size={18} /> : volume < 0.5 ? <Volume1 size={18} /> : <Volume2 size={18} />}
+                            <SkipBack size={18} />
                         </button>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={mudo ? 0 : volume}
-                            onChange={alterarVolume}
-                            title="Volume"
-                            className="w-24 accent-blue-600 cursor-pointer"
-                        />
+
+                        <button
+                            onClick={alternarPlayPause}
+                            title={tocando ? "Pausar" : "Reproduzir"}
+                            className="flex items-center justify-center w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors shrink-0"
+                        >
+                            {tocando ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
+                        </button>
+
+                        <button
+                            onClick={onNext}
+                            disabled={!hasNext}
+                            title="Próxima faixa"
+                            className={btnControle}
+                        >
+                            <SkipForward size={18} />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full max-w-xl">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
+                            {formatarTempo(tempoAtual)}
+                        </span>
+
+                        <div
+                            onClick={buscarPosicao}
+                            title="Buscar posição"
+                            className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer"
+                        >
+                            <div
+                                className="absolute inset-y-0 left-0 rounded-full bg-slate-400 dark:bg-slate-500"
+                                style={{ width: `${buffer}%` }}
+                            />
+                            <div
+                                className="absolute inset-y-0 left-0 rounded-full bg-blue-600"
+                                style={{ width: `${progresso}%` }}
+                            />
+                            <div
+                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-600 border-2 border-white dark:border-slate-800 shadow"
+                                style={{ left: `calc(${progresso}% - 6px)` }}
+                            />
+                        </div>
+
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
+                            {formatarTempo(tempoTotal)}
+                        </span>
                     </div>
                 </div>
 
-                <div className="flex flex-col items-center shrink-0">
+                {/* Bloco direito: volume + extras (colado à direita) */}
+                <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
+                    <button
+                        onClick={alternarMudo}
+                        title={mudo || volume === 0 ? "Ativar som" : "Mudo"}
+                        className={btnExtra}
+                    >
+                        {mudo || volume === 0 ? <VolumeX size={18} /> : volume < 0.5 ? <Volume1 size={18} /> : <Volume2 size={18} />}
+                    </button>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={mudo ? 0 : volume}
+                        onChange={alterarVolume}
+                        title="Volume"
+                        className="w-20 sm:w-24 accent-blue-600 cursor-pointer hidden sm:block"
+                    />
                     <button
                         onClick={onClose}
                         title="Fechar tocador"
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                        className={btnExtra}
                     >
                         <X size={18} />
                     </button>
                     <button
                         onClick={() => setExpandido(v => !v)}
                         title={expandido ? "Recolher detalhes" : "Expandir detalhes"}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                        className={btnExtra}
                     >
                         {expandido ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                     </button>
                 </div>
             </div>
+
+            <audio
+                ref={audioRef}
+                autoPlay
+                onPlay={() => setTocando(true)}
+                onPause={() => setTocando(false)}
+                onEnded={() => {
+                    setTocando(false);
+                    if (hasNext) onNext();
+                }}
+                onTimeUpdate={atualizarTempo}
+                onLoadedMetadata={aoCarregarDuracao}
+                onProgress={atualizarBuffer}
+                onVolumeChange={() => {
+                    const audio = audioRef.current;
+                    if (!audio) return;
+                    setVolume(audio.volume);
+                    setMudo(audio.muted);
+                    localStorage.setItem(VOLUME_KEY, String(audio.volume));
+                    localStorage.setItem(MUTE_KEY, audio.muted ? '1' : '0');
+                }}
+                className="hidden"
+            />
         </div>
     );
 }
