@@ -16,6 +16,10 @@
 body {
   margin: 0;
   font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  background-color: #f1f5f9;
+}
+
+.dark body {
   background-color: #0f172a;
 }
 

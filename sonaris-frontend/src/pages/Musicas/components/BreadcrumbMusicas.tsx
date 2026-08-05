@@ -13,8 +13,8 @@ export function BreadcrumbMusicas({ path, onNavigate }: IBreadcrumbMusicas) {
             <button
                 onClick={() => onNavigate("")}
                 className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors font-medium ${path
-                    ? "text-slate-400 hover:text-white hover:bg-slate-800"
-                    : "text-blue-400"
+                    ? "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
+                    : "text-blue-600 dark:text-blue-400"
                     }`}
             >
                 <FolderTree size={14} />
@@ -27,12 +27,12 @@ export function BreadcrumbMusicas({ path, onNavigate }: IBreadcrumbMusicas) {
 
                 return (
                     <span key={segmentPath} className="flex items-center gap-1">
-                        <ChevronRight size={14} className="text-slate-600" />
+                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-600" />
                         <button
                             onClick={() => onNavigate(segmentPath)}
                             className={`px-2 py-1 rounded-md transition-colors font-medium ${isLast
-                                ? "text-white cursor-default"
-                                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                ? "text-slate-900 dark:text-white cursor-default"
+                                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
                                 }`}
                             disabled={isLast}
                         >

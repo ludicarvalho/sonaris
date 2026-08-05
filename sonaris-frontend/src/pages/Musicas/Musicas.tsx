@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, Music4 } from 'lucide-react';
+import { AlertCircle, Moon, Music4, Sun } from 'lucide-react';
 import { getMusicas } from './services/musicas.service';
 import type { FileSystemItem } from './types';
 import { BreadcrumbMusicas } from './components/BreadcrumbMusicas';
 import { ListaMusicas } from './components/ListaMusicas';
 import { PlayerMusica } from './components/PlayerMusica';
 import { usePageTitle } from '../../hooks/usePageTitle';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const PAGE_SIZE = 30;
 
 export function Musicas() {
   usePageTitle();
+  const { theme, toggleTheme } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const path = searchParams.get('path') ?? '';
   const [items, setItems] = useState<FileSystemItem[]>([]);
@@ -133,7 +135,7 @@ export function Musicas() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 text-slate-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 dark:text-white">
       <div className={`max-w-4xl mx-auto px-4 py-8 ${currentTrack ? 'pb-44' : 'pb-12'}`}>
         <header className="flex items-start justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
@@ -142,13 +144,20 @@ export function Musicas() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Músicas</h1>
-              <p className="text-slate-400 text-sm">Navegue pelas pastas e clique em uma faixa para tocar</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Navegue pelas pastas e clique em uma faixa para tocar</p>
             </div>
           </div>
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/70 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shrink-0"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </header>
 
         {error && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/40 text-red-300 rounded-lg px-4 py-3 mb-5 text-sm">
+          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-300 rounded-lg px-4 py-3 mb-5 text-sm">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
