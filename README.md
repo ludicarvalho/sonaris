@@ -43,20 +43,24 @@ Para derrubar:
 docker compose down
 ```
 
-## Configuração da pasta de músicas
+## Configuração (arquivo `.env`)
 
-Por padrão o compose monta a pasta `/home/luiz/Músicas` como somente leitura dentro do container, em `/Musicas`.
+As configurações ficam em um `.env` na **raiz do projeto** (o Docker Compose lê automaticamente). Crie a partir do exemplo:
 
-Para usar outra pasta, edite o `docker-compose.yml` no serviço `sonaris-backend`:
-
-```yaml
-volumes:
-  - /caminho/para/suas/musicas:/Musicas:ro
+```bash
+cp .env.example .env
 ```
 
-O backend lê a mesma variável `Settings__MusicPath` (valor padrão `/Musicas`).
+| Variável       | Padrão              | Descrição                                             |
+| -------------- | ------------------- | ----------------------------------------------------- |
+| `VITE_API_URL` | `http://localhost:5033` | URL que o frontend (browser) usa para chamar a API |
+| `MUSIC_PATH`   | `/home/luiz/Músicas` | Pasta no host com a coleção de MP3 |
+| `BACKEND_PORT` | `5033`              | Porta do host para a API |
+| `FRONTEND_PORT`| `3003`              | Porta do host para o frontend |
 
-> A coleção fica **somente leitura** (`:ro`) — o container nunca altera os arquivos.
+A pasta de músicas é montada **somente leitura** (`:ro`) dentro do container em `/Musicas` — o container nunca altera os arquivos.
+
+> O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`.
 
 ## API
 
@@ -73,14 +77,11 @@ O endpoint de stream suporta requisições com header `Range` (respostas HTTP 20
 
 ### Apontando o frontend para outra API
 
-A URL da API é definida no build do frontend pelo argumento `VITE_API_URL`. Para alterar, edite o `docker-compose.yml`:
+A URL da API é definida no build do frontend pelo argumento `VITE_API_URL`. Altere o `.env` (variável `VITE_API_URL`) e recrie o container:
 
-```yaml
-args:
-  - VITE_API_URL=http://localhost:5033
+```bash
+docker compose up -d --build sonaris-frontend
 ```
-
-e recrie o container (`docker compose up -d --build sonaris-frontend`).
 
 ## Desenvolvimento local
 

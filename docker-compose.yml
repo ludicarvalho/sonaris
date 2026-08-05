@@ -10,9 +10,9 @@ services:
       - ASPNETCORE_HTTP_PORTS=7071
       - Settings__MusicPath=/Musicas
     ports:
-      - "5033:7071"
+      - "${BACKEND_PORT:-5033}:7071"
     volumes:
-      - /home/luiz/Músicas:/Musicas:ro
+      - "${MUSIC_PATH:-/home/luiz/Músicas}:/Musicas:ro"
 
   sonaris-frontend:
     container_name: sonaris-frontend
@@ -21,8 +21,8 @@ services:
       context: ./sonaris-frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:5033
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5033}
     ports:
-      - "3003:5173"
+      - "${FRONTEND_PORT:-3003}:5173"
     depends_on:
       - sonaris-backend
