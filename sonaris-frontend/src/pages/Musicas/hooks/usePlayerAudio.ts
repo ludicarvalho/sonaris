@@ -90,6 +90,17 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
     // Atalhos de teclado enquanto o tocador está aberto
     useEffect(() => {
         const aoTeclar = (e: KeyboardEvent) => {
+            const alvo = e.target as HTMLElement | null;
+            if (
+                alvo &&
+                (alvo instanceof HTMLInputElement ||
+                 alvo instanceof HTMLTextAreaElement ||
+                 alvo instanceof HTMLSelectElement ||
+                 alvo.isContentEditable)
+            ) {
+                return;
+            }
+
             const audio = audioRef.current;
             if (!audio) return;
             if (e.code === 'Space') {
