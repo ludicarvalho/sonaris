@@ -31,7 +31,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
         buscarPosicao,
         alterarVolume,
         alternarMudo,
-    } = usePlayerAudio(track, hasNext, onNext);
+    } = usePlayerAudio(track, hasPrev, hasNext, onPrev, onNext, onClose);
 
     const [metadata, setMetadata] = useState<MusicMetadata | null>(null);
     const [capaUrl, setCapaUrl] = useState<string | null>(null);
