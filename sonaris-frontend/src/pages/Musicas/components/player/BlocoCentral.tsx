@@ -33,14 +33,15 @@ export function BlocoCentral({
     return (
         <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
             <div className="flex items-center gap-2">
+                <Tooltip label="Faixa anterior" shortcut="Num 4">
                 <button
                     onClick={onPrev}
                     disabled={!hasPrev}
-                    title="Faixa anterior"
                     className={btnControle}
                 >
                     <SkipBack size={18} />
                 </button>
+            </Tooltip>
 
                 <Tooltip label={tocando ? "Pausar" : "Reproduzir"} shortcut="Espaço">
                     <button
@@ -51,14 +52,15 @@ export function BlocoCentral({
                     </button>
                 </Tooltip>
 
+                <Tooltip label="Próxima faixa" shortcut="Num 6">
                 <button
                     onClick={onNext}
                     disabled={!hasNext}
-                    title="Próxima faixa"
                     className={btnControle}
                 >
                     <SkipForward size={18} />
                 </button>
+            </Tooltip>
             </div>
 
             <BarraProgresso

@@ -3,7 +3,7 @@ import { lerMudoInicial, lerVolumeInicial, salvarMudo, salvarVolume } from "../u
 import { streamUrl } from "../services/musicas.service";
 import type { FileSystemItem } from "../types";
 
-export function usePlayerAudio(track: FileSystemItem, hasNext: boolean, onNext: () => void) {
+export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext: boolean, onPrev: () => void, onNext: () => void, onClose: () => void) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [tocando, setTocando] = useState(false);
     const [tempoAtual, setTempoAtual] = useState(0);
@@ -94,11 +94,20 @@ export function usePlayerAudio(track: FileSystemItem, hasNext: boolean, onNext: 
                 audio.volume = Math.max(0, audio.volume - 0.1);
             }
             if (e.key === 'm' || e.key === 'M') audio.muted = !audio.muted;
+            if (e.code === 'Numpad4' && e.key === '4') {
+                e.preventDefault();
+                if (hasPrev) onPrev();
+            }
+            if (e.code === 'Numpad6' && e.key === '6') {
+                e.preventDefault();
+                if (hasNext) onNext();
+            }
+            if (e.key === 'Escape') onClose();
         };
 
         window.addEventListener('keydown', aoTeclar);
         return () => window.removeEventListener('keydown', aoTeclar);
-    }, []);
+    }, [hasPrev, hasNext, onPrev, onNext, onClose]);
 
     // Mantém o mesmo elemento <audio> (volume persiste) e só troca a fonte
     useEffect(() => {

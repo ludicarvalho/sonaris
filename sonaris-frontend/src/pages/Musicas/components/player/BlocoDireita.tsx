@@ -32,13 +32,14 @@ export function BlocoDireita({ volume, mudo, onAlternarMudo, onAlterarVolume, on
                     className="w-20 sm:w-24 accent-blue-600 cursor-pointer hidden sm:block pointer-events-auto"
                 />
             </Tooltip>
-            <button
-                onClick={onClose}
-                title="Fechar tocador"
-                className={btnExtra}
-            >
-                <X size={18} />
-            </button>
+            <Tooltip label="Fechar tocador" shortcut="Esc">
+                <button
+                    onClick={onClose}
+                    className={btnExtra}
+                >
+                    <X size={18} />
+                </button>
+            </Tooltip>
         </div>
     );
 }
