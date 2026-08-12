@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sonaris-backend\Sonaris.Backend.csproj" />
+    <ProjectReference Include="..\Sonaris.Backend.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,8 +12,10 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 
 ```
 Sonaris/
+├── Sonaris.sln            # Solução .NET (backend + testes)
 ├── docker-compose.yml     # Orquestra backend + frontend
 ├── sonaris-backend/       # API .NET 8 (Controllers, Services, parser de metadados)
+│   └── Tests/             # Projeto de testes (xunit + Moq)
 └── sonaris-frontend/      # React/Vite (página de músicas e player)
 ```
 
