@@ -12,7 +12,7 @@ services:
     ports:
       - "${BACKEND_PORT:-5033}:7071"
     volumes:
-      - "${MUSIC_PATH:-/home/luiz/Músicas}:/Musicas:ro"
+      - "${MUSIC_PATH:-/home/luiz/Músicas}:/Musicas:rw"
 
   sonaris-frontend:
     container_name: sonaris-frontend

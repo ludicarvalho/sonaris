@@ -42,7 +42,7 @@ public sealed class Id3v2Tag(Id3v2TagHeader header, IReadOnlyList<IId3v2Frame> f
     /// <summary>
     /// Retorna a capa (frame APIC), priorizando a de capa frontal (FrontCover).
     /// </summary>
-    public MusicCover? GetPictureFrame()
+    public MusicCover GetPictureFrame()
     {
         var pictures = Frames.OfType<AttachedPictureFrame>().ToList();
 

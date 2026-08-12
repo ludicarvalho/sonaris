@@ -5,15 +5,17 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 ## Stack
 
 - **Backend**: ASP.NET Core 8 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG e extração de capa (embutida na ID3v2 ou imagem no diretório).
-- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa (embutida ou imagem da pasta), volume, atalhos de teclado, layout responsivo e detalhes expansíveis (o botão Voltar do navegador fecha os detalhes no mobile).
+- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa (embutida ou imagem da pasta), volume, atalhos de teclado, layout responsivo e detalhes expansíveis com edição de metadados (título, artista, álbum, faixa, ano) e capa — salvos direto do player (o botão Voltar do navegador fecha os detalhes no mobile).
 - **Infra**: Docker Compose (backend + nginx servindo o frontend).
 
 ## Estrutura
 
 ```
 Sonaris/
+├── Sonaris.sln            # Solução .NET (backend + testes)
 ├── docker-compose.yml     # Orquestra backend + frontend
 ├── sonaris-backend/       # API .NET 8 (Controllers, Services, parser de metadados)
+│   └── Tests/             # Projeto de testes (xunit + Moq)
 └── sonaris-frontend/      # React/Vite (página de músicas e player)
 ```
 
@@ -58,7 +60,7 @@ cp .env.example .env
 | `BACKEND_PORT` | `5033`              | Porta do host para a API |
 | `FRONTEND_PORT`| `3003`              | Porta do host para o frontend |
 
-A pasta de músicas é montada **somente leitura** (`:ro`) dentro do container em `/Musicas` — o container nunca altera os arquivos.
+A pasta de músicas é montada no container em `/Musicas` e pode ser **escrita** para permitir a edição de metadados pelo próprio Sonaris (o container altera apenas as tags ID3/capa dos MP3).
 
 > O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`.
 
@@ -72,6 +74,9 @@ Endpoints disponíveis (prefixo `/api/Musica`):
 | Stream       | GET    | `/api/Musica/StreamArquivo?fileName=<caminho.mp3>`      |
 | Metadados    | GET    | `/api/Musica/BuscarMusicaMetadata?fileName=<caminho.mp3>` |
 | Capa         | GET    | `/api/Musica/StreamCapa?fileName=<caminho.mp3>`         |
+| Editar metadados | POST   | `/api/Musica/EditarMetadados` (multipart: `fileName`, `title`, `artist`, `album`, `track`, `year`, `removerCapa`, `capa`) |
+
+A edição de metadados usa as ferramentas `mid3v2` (campos de texto) e `eyeD3` (capa embutida/APIC), instaladas na imagem do backend — os mesmos utilitários usados manualmente no host. Durante a gravação o player pausa e retoma automaticamente.
 
 O endpoint de stream suporta requisições com header `Range` (respostas HTTP 206).
 

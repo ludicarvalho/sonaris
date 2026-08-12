@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { getCapaMusica, getMusicaMetadata } from "../services/musicas.service";
+import { editarMetadados, getCapaMusica, getMusicaMetadata } from "../services/musicas.service";
+import type { EditarMetadadosParams } from "../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../types";
 import { removerExensaoArquivo } from "../../../utils/text";
 import { usePlayerAudio } from "../hooks/usePlayerAudio";
@@ -28,6 +29,8 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
         volume,
         mudo,
         alternarPlayPause,
+        pausar,
+        retomarAposEdicao,
         buscarPosicao,
         alterarVolume,
         alternarMudo,
@@ -36,6 +39,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
     const [metadata, setMetadata] = useState<MusicMetadata | null>(null);
     const [capaUrl, setCapaUrl] = useState<string | null>(null);
     const [expandido, setExpandido] = useState(false);
+    const [versaoDados, setVersaoDados] = useState(0);
     const expandidoRef = useRef(false);
 
     const alternarExpandido = () => {
@@ -78,7 +82,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
         return () => {
             active = false;
         };
-    }, [track]);
+    }, [track, versaoDados]);
 
     // Busca a capa (fallback para o ícone quando a API devolve erro)
     useEffect(() => {
@@ -100,7 +104,19 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
             active = false;
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-    }, [track]);
+    }, [track, versaoDados]);
+
+    const salvarMetadados = async (params: EditarMetadadosParams) => {
+        const estavaTocando = tocando;
+        const posicao = pausar();
+
+        try {
+            await editarMetadados(params);
+            setVersaoDados((v) => v + 1);
+        } finally {
+            retomarAposEdicao(posicao, estavaTocando);
+        }
+    };
 
     const titulo = metadata?.Title || removerExensaoArquivo(track.Name);
     const artistaAlbum = [metadata?.Artist, metadata?.Album].filter(Boolean).join(" • ");
@@ -114,6 +130,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                     artistaAlbum={artistaAlbum}
                     metadata={metadata}
                     track={track}
+                    onSalvarMetadados={salvarMetadados}
                 />
             )}
 
