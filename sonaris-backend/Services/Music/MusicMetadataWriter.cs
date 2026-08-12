@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace Sonaris.Services.Music;
 
+using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
 
 /// <summary>
@@ -13,16 +14,7 @@ public class MusicMetadataWriter : IMusicMetadataWriter
     private const int TimeoutMs = 120000;
     private readonly SemaphoreSlim lockSalvamento = new(1, 1);
 
-    public void SalvarMetadados(
-        string absolutePath,
-        string titulo,
-        string artista,
-        string album,
-        string faixa,
-        string ano,
-        byte[] capaBytes = null,
-        string capaMimeType = null,
-        bool removerCapa = false)
+    public void SalvarMetadados(SalvarMetadadosRequest request)
     {
         lockSalvamento.Wait();
 
@@ -30,18 +22,18 @@ public class MusicMetadataWriter : IMusicMetadataWriter
 
         try
         {
-            SalvarTextos(absolutePath, titulo, artista, album, faixa, ano);
+            SalvarTextos(request);
 
-            if (capaBytes is { Length: > 0 })
+            if (request.CapaBytes is { Length: > 0 })
             {
                 caminhoCapa = Path.Combine(Path.GetTempPath(), $"sonaris-capa-{Guid.NewGuid():N}.jpg");
-                System.IO.File.WriteAllBytes(caminhoCapa, capaBytes);
+                System.IO.File.WriteAllBytes(caminhoCapa, request.CapaBytes);
 
-                Executar("eyeD3", ["--remove-all-images", $"--add-image={caminhoCapa}:FRONT_COVER", absolutePath]);
+                Executar("eyeD3", ["--remove-all-images", $"--add-image={caminhoCapa}:FRONT_COVER", request.AbsolutePath]);
             }
-            else if (removerCapa)
+            else if (request.RemoverCapa)
             {
-                Executar("eyeD3", ["--remove-all-images", absolutePath]);
+                Executar("eyeD3", ["--remove-all-images", request.AbsolutePath]);
             }
         }
         catch (SonarisException) { throw; }
@@ -58,15 +50,15 @@ public class MusicMetadataWriter : IMusicMetadataWriter
         }
     }
 
-    private static void SalvarTextos(string absolutePath, string titulo, string artista, string album, string faixa, string ano)
+    private static void SalvarTextos(SalvarMetadadosRequest request)
     {
         Executar("mid3v2", [
-            $"--song={titulo}",
-            $"--artist={artista}",
-            $"--album={album}",
-            $"--track={faixa}",
-            $"--year={ano}",
-            absolutePath
+            $"--song={request.Titulo}",
+            $"--artist={request.Artista}",
+            $"--album={request.Album}",
+            $"--track={request.Faixa}",
+            $"--year={request.Ano}",
+            request.AbsolutePath
         ]);
     }
 

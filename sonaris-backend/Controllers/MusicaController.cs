@@ -149,16 +149,18 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
                 capaBytes = stream.ToArray();
             }
 
-            musicMetadataWriter.SalvarMetadados(
-                absolutePath,
-                request.Title ?? string.Empty,
-                request.Artist ?? string.Empty,
-                request.Album ?? string.Empty,
-                request.Track ?? string.Empty,
-                request.Year ?? string.Empty,
-                capaBytes,
-                request.Capa?.ContentType,
-                request.RemoverCapa);
+            musicMetadataWriter.SalvarMetadados(new SalvarMetadadosRequest
+            {
+                AbsolutePath = absolutePath,
+                Titulo = request.Title ?? string.Empty,
+                Artista = request.Artist ?? string.Empty,
+                Album = request.Album ?? string.Empty,
+                Faixa = request.Track ?? string.Empty,
+                Ano = request.Year ?? string.Empty,
+                CapaBytes = capaBytes,
+                CapaMimeType = request.Capa?.ContentType,
+                RemoverCapa = request.RemoverCapa
+            });
 
             response.Success = true;
             response.Message = "Metadados atualizados com sucesso.";

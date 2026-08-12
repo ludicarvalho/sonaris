@@ -379,9 +379,15 @@ public class MusicaControllerTests : IDisposable
         var response = Assert.IsType<BaseResponse<string>>(ok.Value);
         Assert.True(response.Success);
         Assert.Equal("Metadados atualizados com sucesso.", response.Message);
-        _musicMetadataWriter.Verify(w => w.SalvarMetadados(
-            It.IsAny<string>(), "Novo título", "Novo artista", "Álbum", "3/12", "2020",
-            It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
+        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.Is<SalvarMetadadosRequest>(r =>
+            r.AbsolutePath != null &&
+            r.Titulo == "Novo título" &&
+            r.Artista == "Novo artista" &&
+            r.Album == "Álbum" &&
+            r.Faixa == "3/12" &&
+            r.Ano == "2020" &&
+            r.CapaBytes == null &&
+            r.RemoverCapa == false)), Times.Once);
     }
 
     [Theory]
@@ -395,7 +401,7 @@ public class MusicaControllerTests : IDisposable
         var response = Assert.IsType<BaseResponse<string>>(objectResult.Value);
         Assert.False(response.Success);
         Assert.Equal("Arquivo não encontrado.", response.Message);
-        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.IsAny<SalvarMetadadosRequest>()), Times.Never);
     }
 
     [Fact]
@@ -431,7 +437,7 @@ public class MusicaControllerTests : IDisposable
         var response = Assert.IsType<BaseResponse<string>>(objectResult.Value);
         Assert.False(response.Success);
         Assert.Equal("Apenas arquivos MP3 podem ter metadados editados.", response.Message);
-        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.IsAny<SalvarMetadadosRequest>()), Times.Never);
     }
 
     [Fact]
@@ -458,9 +464,8 @@ public class MusicaControllerTests : IDisposable
         var response = Assert.IsType<BaseResponse<string>>(ok.Value);
         Assert.True(response.Success);
 
-        _musicMetadataWriter.Verify(w => w.SalvarMetadados(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.Is<byte[]>(b => b != null && b.Length == 4), "image/jpeg", false), Times.Once);
+        _musicMetadataWriter.Verify(w => w.SalvarMetadados(It.Is<SalvarMetadadosRequest>(r =>
+            r.CapaBytes != null && r.CapaBytes.Length == 4 && r.CapaMimeType == "image/jpeg" && r.RemoverCapa == false)), Times.Once);
     }
 
     [Fact]
@@ -469,7 +474,7 @@ public class MusicaControllerTests : IDisposable
         CriarArquivo("musica.mp3");
 
         _musicMetadataWriter
-            .Setup(w => w.SalvarMetadados(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<bool>()))
+            .Setup(w => w.SalvarMetadados(It.IsAny<SalvarMetadadosRequest>()))
             .Throws(new SonarisException("Falha ao executar 'mid3v2'."));
 
         var resultado = await _controller.EditarMetadados(new EditarMetadadosRequest { FileName = "musica.mp3", Title = "T" });
