@@ -26,11 +26,9 @@ public class MusicMetadataReader : IMusicMetadataReader
 
             long audioStartPosition = tag?.AudioStartPosition ?? 0;
 
-            Mp3AudioHeader? audioHeader = audioHeaderReader.FindFirst(reader, audioStartPosition);
-
-            if (audioHeader is null)
-                throw new SonarisException("Não foi possível localizar o header de áudio MPEG.");
-
+            Mp3AudioHeader? audioHeader = audioHeaderReader.FindFirst(reader, audioStartPosition)
+                ?? throw new SonarisException("Não foi possível localizar o header de áudio MPEG.");
+            
             long firstFramePosition = reader.Position;
 
             XingHeader? xing = xingHeaderParser.Read(reader, audioHeader.Value, firstFramePosition);
@@ -62,9 +60,9 @@ public class MusicMetadataReader : IMusicMetadataReader
 
             Id3v2Tag tag = id3v2TagParser.Read(reader);
 
-            MusicCover? capa = tag?.GetPictureFrame();
+            MusicCover capa = tag?.GetPictureFrame();
 
-            if (capa is not null)
+            if (capa != null)
                 return capa;
 
             return RetornarCapaDoDiretorio(absolutePath);
@@ -79,7 +77,7 @@ public class MusicMetadataReader : IMusicMetadataReader
     /// Procura por uma imagem (.jpg, .jpeg, .png) no mesmo diretório da música
     /// e a usa como capa quando a tag ID3v2 não possui imagem embutida.
     /// </summary>
-    private MusicCover RetornarCapaDoDiretorio(string absolutePath)
+    private static MusicCover RetornarCapaDoDiretorio(string absolutePath)
     {
         var diretorio = Path.GetDirectoryName(absolutePath);
 

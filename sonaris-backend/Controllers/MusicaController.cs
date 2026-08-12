@@ -52,7 +52,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
         {
             var paged = arquivoService.RetornarDadosPorPath(request.Path, request.PageNumber, request.PageSize);
 
-            response.Data = paged.Items.ToArray();
+            response.Data = [.. paged.Items];
             response.PageInfo = new PageInfoRequest(paged.PageIndex, paged.PageSize);
             response.Pages = paged.TotalPages;
             response.ItemsTotal = paged.TotalCount;
@@ -109,10 +109,9 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
 
             var capa = musicMetadataReader.RetornarCapaMusica(absolutePath);
 
-            if (capa == null)
-                throw new SonarisException("Capa não encontrada.");
-
-            return File(capa.Data, capa.MimeType);
+            return (capa == null)
+                ? throw new SonarisException("Capa não encontrada.")
+                : (IActionResult)File(capa.Data, capa.MimeType);
         }
         catch (Exception ex)
         {
