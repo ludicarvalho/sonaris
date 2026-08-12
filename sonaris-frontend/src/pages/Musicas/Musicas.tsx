@@ -8,11 +8,11 @@ import { ListaMusicas } from './components/ListaMusicas';
 import { PlayerMusica } from './components/PlayerMusica';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { useTheme } from '../../contexts/useTheme';
+import { removerExensaoArquivo } from '../../utils/text';
 
 const PAGE_SIZE = 30;
 
 export function Musicas() {
-  usePageTitle();
   const { theme, toggleTheme } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const path = searchParams.get('path') ?? '';
@@ -25,6 +25,9 @@ export function Musicas() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const tituloFaixa = currentTrack ? removerExensaoArquivo(currentTrack.Name) : undefined;
+  usePageTitle(tituloFaixa);
 
   const navigateTo = (p: string) => {
     setSearchParams(p ? { path: p } : {}, { replace: false });

@@ -7,11 +7,11 @@ const routeTitles: Record<string, string> = {
 
 const APP_NAME = 'Sonaris';
 
-export function usePageTitle() {
+export function usePageTitle(subtitle?: string) {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const pageTitle = routeTitles[pathname];
-    document.title = pageTitle ? `${pageTitle} | ${APP_NAME}` : APP_NAME;
-  }, [pathname]);
+    const pageTitle = subtitle ?? routeTitles[pathname];
+    document.title = pageTitle ? `${APP_NAME} | ${pageTitle}` : APP_NAME;
+  }, [pathname, subtitle]);
 }
