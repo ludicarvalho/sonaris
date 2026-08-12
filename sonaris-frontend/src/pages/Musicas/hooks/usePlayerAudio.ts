@@ -20,6 +20,26 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         else audio.pause();
     };
 
+    const pausar = () => {
+        const audio = audioRef.current;
+        if (!audio) return 0;
+        audio.pause();
+        return audio.currentTime;
+    };
+
+    const retomarAposEdicao = (posicao: number, deveTocar: boolean) => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const aplicar = () => {
+            if (isFinite(posicao)) audio.currentTime = posicao;
+            if (deveTocar) audio.play().catch(() => { });
+        };
+
+        audio.addEventListener('loadedmetadata', aplicar, { once: true });
+        audio.load();
+    };
+
     const atualizarTempo = () => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -152,6 +172,8 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         volume,
         mudo,
         alternarPlayPause,
+        pausar,
+        retomarAposEdicao,
         buscarPosicao,
         alterarVolume,
         alternarMudo,

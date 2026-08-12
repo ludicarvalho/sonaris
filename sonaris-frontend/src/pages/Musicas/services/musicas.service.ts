@@ -22,3 +22,28 @@ export const getCapaMusica = (fileName: string) =>
     params: { fileName },
     responseType: 'blob',
   });
+
+export interface EditarMetadadosParams {
+  fileName: string;
+  title?: string;
+  artist?: string;
+  album?: string;
+  track?: string;
+  year?: string;
+  removerCapa?: boolean;
+  capa?: File | null;
+}
+
+export const editarMetadados = (params: EditarMetadadosParams) => {
+  const formData = new FormData();
+  formData.append('fileName', params.fileName);
+  formData.append('title', params.title ?? '');
+  formData.append('artist', params.artist ?? '');
+  formData.append('album', params.album ?? '');
+  formData.append('track', params.track ?? '');
+  formData.append('year', params.year ?? '');
+  formData.append('removerCapa', String(!!params.removerCapa));
+  if (params.capa) formData.append('capa', params.capa);
+
+  return http.post<BaseResponse<string>>('/api/Musica/EditarMetadados', formData);
+};

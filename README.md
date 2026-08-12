@@ -58,7 +58,7 @@ cp .env.example .env
 | `BACKEND_PORT` | `5033`              | Porta do host para a API |
 | `FRONTEND_PORT`| `3003`              | Porta do host para o frontend |
 
-A pasta de músicas é montada **somente leitura** (`:ro`) dentro do container em `/Musicas` — o container nunca altera os arquivos.
+A pasta de músicas é montada no container em `/Musicas` e pode ser **escrita** para permitir a edição de metadados pelo próprio Sonaris (o container altera apenas as tags ID3/capa dos MP3).
 
 > O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`.
 
@@ -72,6 +72,9 @@ Endpoints disponíveis (prefixo `/api/Musica`):
 | Stream       | GET    | `/api/Musica/StreamArquivo?fileName=<caminho.mp3>`      |
 | Metadados    | GET    | `/api/Musica/BuscarMusicaMetadata?fileName=<caminho.mp3>` |
 | Capa         | GET    | `/api/Musica/StreamCapa?fileName=<caminho.mp3>`         |
+| Editar metadados | POST   | `/api/Musica/EditarMetadados` (multipart: `fileName`, `title`, `artist`, `album`, `track`, `year`, `removerCapa`, `capa`) |
+
+A edição de metadados usa as ferramentas `mid3v2` (campos de texto) e `eyeD3` (capa embutida/APIC), instaladas na imagem do backend — os mesmos utilitários usados manualmente no host. Durante a gravação o player pausa e retoma automaticamente.
 
 O endpoint de stream suporta requisições com header `Range` (respostas HTTP 206).
 

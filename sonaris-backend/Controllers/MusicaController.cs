@@ -10,10 +10,11 @@ using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;
 
 [Route("api/Musica/[action]")]
-public class MusicaController(IArquivoService arquivoService, IMusicMetadataReader musicMetadataReader, IConfiguration configuration) : BaseController
+public class MusicaController(IArquivoService arquivoService, IMusicMetadataReader musicMetadataReader, IMusicMetadataWriter musicMetadataWriter, IConfiguration configuration) : BaseController
 {
     private readonly IArquivoService arquivoService = arquivoService ?? throw new ArgumentNullException(nameof(arquivoService));
     private readonly IMusicMetadataReader musicMetadataReader = musicMetadataReader ?? throw new ArgumentNullException(nameof(musicMetadataReader));
+    private readonly IMusicMetadataWriter musicMetadataWriter = musicMetadataWriter ?? throw new ArgumentNullException(nameof(musicMetadataWriter));
     private readonly string MUSIC_PATH = configuration["Settings:MusicPath"] ?? "/Musicas";
 
     [HttpGet]
@@ -120,5 +121,54 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
 
             return Result(response);
         }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> EditarMetadados([FromForm] EditarMetadadosRequest request)
+    {
+        BaseResponse<string> response = new();
+
+        try
+        {
+            var absolutePath = Path.GetFullPath(Path.Combine(MUSIC_PATH, request.FileName ?? string.Empty));
+
+            if (!absolutePath.StartsWith(MUSIC_PATH, StringComparison.OrdinalIgnoreCase))
+                throw new SonarisException("Arquivo não encontrado.");
+
+            if (!System.IO.File.Exists(absolutePath))
+                throw new SonarisException("Arquivo não encontrado.");
+
+            if (!Path.GetExtension(absolutePath).Equals(".mp3", StringComparison.OrdinalIgnoreCase))
+                throw new SonarisException("Apenas arquivos MP3 podem ter metadados editados.");
+
+            byte[] capaBytes = null;
+
+            if (request.Capa is { Length: > 0 })
+            {
+                using var stream = new MemoryStream();
+                await request.Capa.CopyToAsync(stream);
+                capaBytes = stream.ToArray();
+            }
+
+            musicMetadataWriter.SalvarMetadados(
+                absolutePath,
+                request.Title ?? string.Empty,
+                request.Artist ?? string.Empty,
+                request.Album ?? string.Empty,
+                request.Track ?? string.Empty,
+                request.Year ?? string.Empty,
+                capaBytes,
+                request.Capa?.ContentType,
+                request.RemoverCapa);
+
+            response.Success = true;
+            response.Message = "Metadados atualizados com sucesso.";
+        }
+        catch (Exception ex)
+        {
+            response.MontarErro(ex);
+        }
+
+        return Result(response);
     }
 }

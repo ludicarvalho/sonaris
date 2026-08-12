@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IArquivoService, ArquivoService>();
 builder.Services.AddSingleton<IMusicMetadataReader, MusicMetadataReader>();
+builder.Services.AddSingleton<IMusicMetadataWriter, MusicMetadataWriter>();
 
 builder.Services.AddCors((options) =>
     options.AddPolicy("AllowAll", (policy) =>
