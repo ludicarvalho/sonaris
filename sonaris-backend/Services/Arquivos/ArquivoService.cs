@@ -77,4 +77,49 @@ public class ArquivoService(IConfiguration configuration) : IArquivoService
             throw new SonarisException("Erro ao tentar recuperar lista de arquivos.", ex);
         }
     }
+
+    public List<FileSystemItemDto> BuscarPorNome(string termo)
+    {
+        try
+        {
+            const int limiteResultados = 30;
+
+            var diretorioRaiz = Path.GetFullPath(MUSIC_PATH);
+
+            if (!Directory.Exists(diretorioRaiz))
+                throw new DirectoryNotFoundException($"Diretório de músicas não encontrado: {diretorioRaiz}");
+
+            var busca = (termo ?? string.Empty).Trim();
+
+            if (busca.Length == 0)
+                return [];
+
+            var opcoes = new EnumerationOptions
+            {
+                RecurseSubdirectories = true,
+                IgnoreInaccessible = true
+            };
+
+            return Directory
+                .EnumerateFiles(diretorioRaiz, "*.mp3", opcoes)
+                .Select(caminho => new FileInfo(caminho))
+                .Where(f => f.Name.Contains(busca, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f.Name)
+                .Take(limiteResultados)
+                .Select(f => new FileSystemItemDto(f.FullName)
+                {
+                    Name = f.Name,
+                    RelativePath = Path.GetRelativePath(diretorioRaiz, f.FullName),
+                    IsDirectory = false,
+                    Size = f.Length,
+                    LastModified = f.LastWriteTimeUtc
+                })
+                .ToList();
+        }
+        catch (SonarisException) { throw; }
+        catch (Exception ex)
+        {
+            throw new SonarisException("Erro ao tentar buscar músicas pelo nome.", ex);
+        }
+    }
 }

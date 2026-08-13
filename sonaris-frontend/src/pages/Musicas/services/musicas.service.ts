@@ -9,6 +9,12 @@ export const getMusicas = (path: string, page: number, pageSize: number) =>
     params: { path, PageNumber: page, PageSize: pageSize },
   });
 
+export const buscarMusicasPorNome = (termo: string, signal?: AbortSignal) =>
+  http.get<BaseResponse<FileSystemItem[]>>('/api/Musica/BuscarPorNome', {
+    params: { termo },
+    signal,
+  });
+
 export const streamUrl = (relativePath: string) =>
   `${BASE_URL}/api/Musica/StreamArquivo?fileName=${encodeURIComponent(relativePath)}`;
 

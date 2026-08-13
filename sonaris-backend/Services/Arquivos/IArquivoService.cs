@@ -9,4 +9,9 @@ public interface IArquivoService
     /// Retorna a lista de diretórios e arquivos .mp3 de um caminho, paginado.
     /// </summary>
     PagedResult<FileSystemItemDto> RetornarDadosPorPath(string path, int pageNumber, int pageSize);
+
+    /// <summary>
+    /// Busca recursivamente arquivos .mp3 cujo nome contenha o termo informado.
+    /// </summary>
+    List<FileSystemItemDto> BuscarPorNome(string termo);
 }

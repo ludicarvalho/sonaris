@@ -4,6 +4,7 @@ import { AlertCircle, Moon, Music4, Sun } from 'lucide-react';
 import { getMusicas } from './services/musicas.service';
 import type { FileSystemItem } from './types';
 import { BreadcrumbMusicas } from './components/BreadcrumbMusicas';
+import { BuscadorMusicas } from './components/BuscadorMusicas';
 import { ListaMusicas } from './components/ListaMusicas';
 import { PlayerMusica } from './components/PlayerMusica';
 import { usePageTitle } from '../../hooks/usePageTitle';
@@ -124,6 +125,13 @@ export function Musicas() {
     }
   };
 
+  const handleSelectBusca = (item: FileSystemItem) => {
+    const idx = item.RelativePath.lastIndexOf('/');
+    const pasta = idx > 0 ? item.RelativePath.slice(0, idx) : '';
+    navigateTo(pasta);
+    setCurrentTrack(item);
+  };
+
   const faixas = items.filter(item => !item.IsDirectory);
   const faixaAtualIdx = faixas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
 
@@ -165,6 +173,10 @@ export function Musicas() {
             <span>{error}</span>
           </div>
         )}
+
+        <div className="mb-4">
+          <BuscadorMusicas onSelect={handleSelectBusca} />
+        </div>
 
         <div className="mb-4">
           <BreadcrumbMusicas path={path} onNavigate={navigateTo} />
