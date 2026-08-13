@@ -4,6 +4,7 @@ import type { EditarMetadadosParams } from "../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../types";
 import { removerExensaoArquivo } from "../../../utils/text";
 import { usePlayerAudio } from "../hooks/usePlayerAudio";
+import { useMediaSession } from "../hooks/useMediaSession";
 import { BlocoCentral } from "./player/BlocoCentral";
 import { BlocoDireita } from "./player/BlocoDireita";
 import { BlocoEsquerda } from "./player/BlocoEsquerda";
@@ -29,6 +30,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
         volume,
         mudo,
         alternarPlayPause,
+        reproduzir,
         pausar,
         retomarAposEdicao,
         buscarPosicao,
@@ -120,6 +122,18 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
 
     const titulo = metadata?.Title || removerExensaoArquivo(track.Name);
     const artistaAlbum = [metadata?.Artist, metadata?.Album].filter(Boolean).join(" • ");
+
+    useMediaSession({
+        titulo,
+        artista: metadata?.Artist || "",
+        album: metadata?.Album || "",
+        capaUrl,
+        tocando,
+        onReproduzir: reproduzir,
+        onPausar: pausar,
+        onPrev,
+        onNext,
+    });
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] flex flex-col max-h-[100vh]">
