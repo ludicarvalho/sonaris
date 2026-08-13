@@ -236,6 +236,92 @@ public class MusicaControllerTests : IDisposable
     }
 
     [Fact]
+    public void BuscarPorNome_Sucesso_RetornaOkComDados()
+    {
+        var itens = new List<FileSystemItemDto>
+        {
+            new("Alley Cat.mp3")
+            {
+                Name = "Alley Cat.mp3",
+                RelativePath = "Variadas/Alley Cat.mp3",
+                IsDirectory = false,
+                Size = 123
+            },
+            new("Alley Oop.mp3")
+            {
+                Name = "Alley Oop.mp3",
+                RelativePath = "Outra/Alley Oop.mp3",
+                IsDirectory = false,
+                Size = 456
+            }
+        };
+
+        _arquivoService
+            .Setup(s => s.BuscarPorNome("Alley"))
+            .Returns(itens);
+
+        var resultado = _controller.BuscarPorNome("Alley");
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var response = Assert.IsType<BaseResponse<FileSystemItemDto[]>>(ok.Value);
+        Assert.True(response.Success);
+        Assert.Equal("Músicas encontradas com sucesso.", response.Message);
+        Assert.Equal(2, response.Data.Length);
+        Assert.Equal("Alley Cat.mp3", response.Data[0].Name);
+        Assert.Equal("Variadas/Alley Cat.mp3", response.Data[0].RelativePath);
+        _arquivoService.Verify(s => s.BuscarPorNome("Alley"), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BuscarPorNome_TermoVazioOuNulo_RetornaOkComListaVazia(string termo)
+    {
+        _arquivoService
+            .Setup(s => s.BuscarPorNome(It.IsAny<string>()))
+            .Returns([]);
+
+        var resultado = _controller.BuscarPorNome(termo);
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var response = Assert.IsType<BaseResponse<FileSystemItemDto[]>>(ok.Value);
+        Assert.True(response.Success);
+        Assert.Empty(response.Data);
+    }
+
+    [Fact]
+    public void BuscarPorNome_ServicoLancaSonarisException_RetornaBadRequest()
+    {
+        _arquivoService
+            .Setup(s => s.BuscarPorNome(It.IsAny<string>()))
+            .Throws(new SonarisException("Erro ao buscar músicas."));
+
+        var resultado = _controller.BuscarPorNome("Alley");
+
+        var objectResult = AssertBadRequest(resultado);
+        var response = Assert.IsType<BaseResponse<FileSystemItemDto[]>>(objectResult.Value);
+        Assert.False(response.Success);
+        Assert.Equal("Erro ao buscar músicas.", response.Message);
+    }
+
+    [Fact]
+    public void BuscarPorNome_ServicoLancaExcecaoGenerica_RetornaBadRequest()
+    {
+        _arquivoService
+            .Setup(s => s.BuscarPorNome(It.IsAny<string>()))
+            .Throws(new InvalidOperationException("boom"));
+
+        var resultado = _controller.BuscarPorNome("Alley");
+
+        var objectResult = AssertBadRequest(resultado);
+        var response = Assert.IsType<BaseResponse<FileSystemItemDto[]>>(objectResult.Value);
+        Assert.False(response.Success);
+        Assert.Equal(MensagemGenerica, response.Message);
+        Assert.Equal("boom", response.ErrorDetails);
+    }
+
+    [Fact]
     public void BuscarMusicaMetadata_ArquivoExistente_RetornaOkComMetadata()
     {
         CriarArquivo("musica.mp3");

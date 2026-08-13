@@ -68,6 +68,25 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
     }
 
     [HttpGet]
+    public IActionResult BuscarPorNome([FromQuery] string termo)
+    {
+        BaseResponse<FileSystemItemDto[]> response = new();
+
+        try
+        {
+            response.Data = [.. arquivoService.BuscarPorNome(termo)];
+            response.Success = true;
+            response.Message = "Músicas encontradas com sucesso.";
+        }
+        catch (Exception ex)
+        {
+            response.MontarErro(ex);
+        }
+
+        return Result(response);
+    }
+
+    [HttpGet]
     public IActionResult BuscarMusicaMetadata([FromQuery] string fileName)
     {
         BaseResponse<MusicMetadata> response = new();
