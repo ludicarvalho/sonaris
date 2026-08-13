@@ -18,7 +18,7 @@ services:
     container_name: sonaris-frontend
     restart: always
     build:
-      context: ./sonaris-frontend
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=${VITE_API_URL:-}
