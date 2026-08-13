@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonaris.Backend", "sonaris-backend\Sonaris.Backend.csproj", "{758E50F8-CBA4-418C-8AE5-E5CF01560C1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonaris.Backend", "backend\Sonaris.Backend.csproj", "{758E50F8-CBA4-418C-8AE5-E5CF01560C1A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{418441BD-1C5E-4A00-A189-265C43B721A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonaris.Backend.Tests", "sonaris-backend\Tests\Sonaris.Backend.Tests.csproj", "{D516F9A8-7AB6-44CD-8EC1-08A295946AB5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonaris.Backend.Tests", "backend\Tests\Sonaris.Backend.Tests.csproj", "{D516F9A8-7AB6-44CD-8EC1-08A295946AB5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "frontend", "frontend", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
