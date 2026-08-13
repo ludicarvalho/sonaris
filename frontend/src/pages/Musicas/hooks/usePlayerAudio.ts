@@ -27,6 +27,10 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         return audio.currentTime;
     };
 
+    const reproduzir = () => {
+        audioRef.current?.play().catch(() => { });
+    };
+
     const retomarAposEdicao = (posicao: number, deveTocar: boolean) => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -183,6 +187,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         volume,
         mudo,
         alternarPlayPause,
+        reproduzir,
         pausar,
         retomarAposEdicao,
         buscarPosicao,

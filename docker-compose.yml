@@ -3,7 +3,7 @@ services:
     container_name: sonaris-backend
     restart: always
     build:
-      context: ./sonaris-backend
+      context: ./backend
       dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -18,7 +18,7 @@ services:
     container_name: sonaris-frontend
     restart: always
     build:
-      context: ./sonaris-frontend
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=${VITE_API_URL:-}
