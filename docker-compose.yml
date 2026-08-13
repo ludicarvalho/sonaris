@@ -3,7 +3,7 @@ services:
     container_name: sonaris-backend
     restart: always
     build:
-      context: ./sonaris-backend
+      context: ./backend
       dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
