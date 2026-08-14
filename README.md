@@ -12,11 +12,11 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 
 ```
 Sonaris/
-├── Sonaris.sln            # Solução .NET (backend + testes)
+├── Sonaris.sln            # Solução (backend + testes + frontend.esproj)
 ├── docker-compose.yml     # Orquestra backend + frontend
-├── sonaris-backend/       # API .NET 8 (Controllers, Services, parser de metadados)
+├── backend/               # API .NET 8 (Controllers, Services, parser de metadados)
 │   └── Tests/             # Projeto de testes (xunit + Moq)
-└── sonaris-frontend/      # React/Vite (página de músicas e player)
+└── frontend/              # React/Vite (página de músicas e player) + frontend.esproj
 ```
 
 ## Requisitos
@@ -93,37 +93,45 @@ Se nenhuma imagem for encontrada, o endpoint retorna erro 400 (`Capa não encont
 
 O nginx do container do frontend faz **proxy** de todas as chamadas `/api/*` para o backend (serviço `sonaris-backend:7071`). Por isso o `VITE_API_URL` fica **vazio** por padrão: o browser chama a mesma origem do frontend e funciona em qualquer máquina, sem configurar IP. O backend também continua exposto na porta do host (`BACKEND_PORT`) para acesso direto (Swagger, testes).
 
-Só use uma URL completa no `VITE_API_URL` se estiver servindo o frontend sem o proxy (ex.: Vite em dev, apontando direto para a API).
+Só use uma URL completa no `VITE_API_URL` se estiver servindo o frontend **sem** proxy (ex.: o build servido por um servidor estático que não faz proxy do `/api`).
 
 ## Desenvolvimento local
 
-### Frontend
+### Visual Studio (F5 — backend + frontend juntos)
+
+O `Sonaris.sln` já inclui o `frontend/frontend.esproj`, então o F5 consegue rodar os dois. Para isso:
+
+1. Abra o `Sonaris.sln` no Visual Studio 2022.
+2. **Configure Startup Projects**: clique com o botão direito na solução → *Configure Startup Projects…* → escolha **Multiple startup projects** → defina **`Sonaris.Backend`** e **`frontend`** como **Start** (nessa ordem).
+3. Aperte **F5**. O backend sobe em `http://localhost:7071` e o frontend (Vite) em `http://localhost:5173` — abra esse endereço no navegador.
+
+> Esse ajuste é uma configuração local do VS (fica em `.vs/`, não versionado) — só precisa ser feito uma vez.
+
+O Vite tem um **proxy** de `/api/*` para o backend em `http://localhost:7071` (configurado em `frontend/vite.config.ts`), então o frontend funciona sem `VITE_API_URL` (mesma origem), igual ao nginx em produção.
+
+### Frontend (só o front, sem o VS)
 
 ```bash
-cd sonaris-frontend
+cd frontend
 npm install
 npm run dev      # Vite em http://localhost:5173
 ```
 
-Configure a API em `.env` (crie a partir do `.env.example`):
-
-```
-VITE_API_URL=http://localhost:5033
-```
+A API é acessada pelo proxy do Vite (`/api` → `http://localhost:7071`). Se o backend estiver em outra porta, ajuste o `target` em `frontend/vite.config.ts`.
 
 ### Backend
 
 ```bash
-cd sonaris-backend
+cd backend
 dotnet restore
 dotnet run --project Sonaris.Backend.csproj
 ```
 
-Defina a pasta de músicas em `appsettings.json` (`Settings:MusicPath`).
+Defina a pasta de músicas em `appsettings.json` (`Settings:MusicPath`). Em dev via F5, o backend sobe em `http://localhost:7071` (configurado em `Properties/launchSettings.json`).
 
 ## Lint
 
 ```bash
-cd sonaris-frontend
+cd frontend
 npm run lint
 ```

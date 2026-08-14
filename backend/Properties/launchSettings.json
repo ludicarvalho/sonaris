@@ -2,11 +2,11 @@
   "profiles": {
     "Sonaris.Backend": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:61975;http://localhost:61976"
+      "applicationUrl": "https://localhost:7072;http://localhost:7071"
     }
   }
 }
