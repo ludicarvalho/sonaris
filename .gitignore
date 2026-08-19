@@ -1,5 +1,69 @@
+# =========================
+# Environment
+# =========================
 .env
 .env.*
 !.env.example
+
+# =========================
+# .NET
+# =========================
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
+project.nuget.cache
+*.nuget.props
+*.nuget.targets
+
+# =========================
+# IDE / Editor
+# =========================
 .vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =========================
+# Node.js / Frontend
+# =========================
+node_modules/
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
+
+# =========================
+# Docker
+# =========================
+.docker/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# =========================
+# Misc
+# =========================
 ultimo*
+*.log
