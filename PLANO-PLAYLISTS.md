@@ -16,7 +16,7 @@ Duas features grandes, integradas:
 ### 1.1 Pacote NuGet
 
 ```bash
-dotnet add package Microsoft.Data.Sqlite --version 8.0.30
+dotnet add package Microsoft.Data.Sqlite
 ```
 
 Sem EF Core. ADO.NET puro, leve, sem overhead.
@@ -41,29 +41,54 @@ CREATE TABLE IF NOT EXISTS music (
     last_scanned    TEXT NOT NULL DEFAULT ''
 );
 
--- FTS5 external-content (só indexa, não duplica dados)
+-- Índice FTS5 padrão (unicode61) — busca por palavras em metadados
 CREATE VIRTUAL TABLE IF NOT EXISTS music_fts USING fts5(
-    title, artist, album, filename,
+    title, artist, album,
     content='music',
     content_rowid='id'
 );
 
--- Triggers de sincronização automática
+-- Índice FTS5 trigram — busca por substring em filename/caminho
+CREATE VIRTUAL TABLE IF NOT EXISTS music_path_fts USING fts5(
+    filename, relative_path,
+    tokenize='trigram',
+    detail='none'
+);
+
+-- Triggers de sincronização automática (music_fts)
 CREATE TRIGGER IF NOT EXISTS music_fts_insert AFTER INSERT ON music BEGIN
-    INSERT INTO music_fts(rowid, title, artist, album, filename)
-    VALUES (new.id, new.title, new.artist, new.album, new.filename);
+    INSERT INTO music_fts(rowid, title, artist, album)
+    VALUES (new.id, new.title, new.artist, new.album);
 END;
 
 CREATE TRIGGER IF NOT EXISTS music_fts_update AFTER UPDATE ON music BEGIN
-    INSERT INTO music_fts(music_fts, rowid, title, artist, album, filename)
-    VALUES ('delete', old.id, old.title, old.artist, old.album, old.filename);
-    INSERT INTO music_fts(rowid, title, artist, album, filename)
-    VALUES (new.id, new.title, new.artist, new.album, new.filename);
+    INSERT INTO music_fts(music_fts, rowid, title, artist, album)
+    VALUES ('delete', old.id, old.title, old.artist, old.album);
+    INSERT INTO music_fts(rowid, title, artist, album)
+    VALUES (new.id, new.title, new.artist, new.album);
 END;
 
 CREATE TRIGGER IF NOT EXISTS music_fts_delete AFTER DELETE ON music BEGIN
-    INSERT INTO music_fts(music_fts, rowid, title, artist, album, filename)
-    VALUES ('delete', old.id, old.title, old.artist, old.album, old.filename);
+    INSERT INTO music_fts(music_fts, rowid, title, artist, album)
+    VALUES ('delete', old.id, old.title, old.artist, old.album);
+END;
+
+-- Triggers de sincronização automática (music_path_fts)
+CREATE TRIGGER IF NOT EXISTS music_path_fts_insert AFTER INSERT ON music BEGIN
+    INSERT INTO music_path_fts(rowid, filename, relative_path)
+    VALUES (new.id, new.filename, new.relative_path);
+END;
+
+CREATE TRIGGER IF NOT EXISTS music_path_fts_update AFTER UPDATE ON music BEGIN
+    INSERT INTO music_path_fts(music_path_fts, rowid, filename, relative_path)
+    VALUES ('delete', old.id, old.filename, old.relative_path);
+    INSERT INTO music_path_fts(rowid, filename, relative_path)
+    VALUES (new.id, new.filename, new.relative_path);
+END;
+
+CREATE TRIGGER IF NOT EXISTS music_path_fts_delete AFTER DELETE ON music BEGIN
+    INSERT INTO music_path_fts(music_path_fts, rowid, filename, relative_path)
+    VALUES ('delete', old.id, old.filename, old.relative_path);
 END;
 ```
 
@@ -90,22 +115,50 @@ public class MusicIndexerBackgroundService : BackgroundService
 // Services/Search/IMusicSearchService.cs
 public interface IMusicSearchService
 {
+    /// <summary>
+    /// Busca híbrida: FTS5 padrão (metadados) + trigram (filename/caminho).
+    /// Resultados combinados e ranqueados por BM25.
+    /// </summary>
     PagedResult<MusicSearchResult> Search(string query, int pageNumber = 1, int pageSize = 30);
     Task<int> GetIndexedCountAsync();
 }
 ```
 
-**Busca FTS5 com BM25 ranking:**
+**Busca híbrida — FTS5 padrão + trigram:**
 
 ```sql
-SELECT m.*, fts.rank,
-       snippet(music_fts, 0, '<b>', '</b>', '...', 32) AS snippet
+-- Busca em metadados (palavras inteiras, BM25 ranking)
+SELECT m.*, fts.rank AS rank,
+       snippet(music_fts, 0, '<b>', '</b>', '...', 32) AS snippet,
+       'metadata' AS match_source
 FROM music_fts fts
 JOIN music m ON m.id = fts.rowid
 WHERE music_fts MATCH @query
-ORDER BY fts.rank
+
+UNION ALL
+
+-- Busca em filename/caminho (substring via trigram)
+SELECT m.*, 0 AS rank,
+       '' AS snippet,
+       'path' AS match_source
+FROM music_path_fts fts
+JOIN music m ON m.id = fts.rowid
+WHERE music_path_fts MATCH '"' || @query || '"'
+
+ORDER BY rank
 LIMIT @limit OFFSET @offset
 ```
+
+**Exemplo — busca por "pai":**
+
+| Resultado | match_source | Rank |
+|---|---|---|
+| Música: "Meu **Pai**" | `metadata` | BM25 (alto) |
+| Música: "O **Pai** da Música" | `metadata` | BM25 (médio) |
+| Arquivo: `rock/**pai**xao.mp3` | `path` | 0 (substituto) |
+| Arquivo: `artistas/**pai**nos.mp3` | `path` | 0 (substituto) |
+
+Metadados sempre vêm primeiro (BM25 > 0). Path serve como fallback para filenames.
 
 ### 1.5 Novo Endpoint
 
@@ -341,8 +394,8 @@ src/
 ## Decisões de Design
 
 - **SQLite** via `Microsoft.Data.Sqlite` — ADO.NET puro, sem EF Core
-- **FTS5** external-content com triggers de sincronização automática
-- **BM25 ranking** para resultados relevantes primeiro
+- **FTS5 híbrido** — `unicode61` para metadados (palavras inteiras) + `trigram` para filename/caminho (substring)
+- **BM25 ranking** para resultados relevantes primeiro em metadados
 - **Background scan** — não bloqueia inicialização da API
 - **Playlists no backend** — persistem entre dispositivos
 - **Músicas referenciadas por `relativePath`** — quebra se arquivo for movido/renomeado (aceitável)
