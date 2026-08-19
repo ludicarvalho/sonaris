@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using Scalar.AspNetCore;
+
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;
 
@@ -9,8 +11,7 @@ builder.Services.AddControllers()
     .AddJsonOptions((options) =>
         options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<IArquivoService, ArquivoService>();
 builder.Services.AddSingleton<IMusicMetadataReader, MusicMetadataReader>();
@@ -24,13 +25,11 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseCors("AllowAll");
-
-app.UseAuthorization();
 
 app.MapControllers();
 
