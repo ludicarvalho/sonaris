@@ -17,10 +17,8 @@ public static class BaseResponseExtensions
         response.Data = new { };
         response.StatusCode = HttpStatusCode.BadRequest;
 
-        if (ex is SonarisException)
+        if (ex is SonarisException exception)
         {
-            var exception = ex as SonarisException;
-
             response.Message = exception.Message;
 
             if (exception.InnerException != null && !string.IsNullOrWhiteSpace(exception.InnerException.Message))
