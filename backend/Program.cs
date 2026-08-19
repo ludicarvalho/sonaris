@@ -4,6 +4,8 @@ using Scalar.AspNetCore;
 
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;
+using Sonaris.Services.Playlists;
+using Sonaris.Services.Search;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IArquivoService, ArquivoService>();
 builder.Services.AddSingleton<IMusicMetadataReader, MusicMetadataReader>();
 builder.Services.AddSingleton<IMusicMetadataWriter, MusicMetadataWriter>();
+builder.Services.AddSingleton<IMusicSearchService, MusicSearchService>();
+builder.Services.AddSingleton<IPlaylistService, PlaylistService>();
+builder.Services.AddHostedService<MusicIndexerBackgroundService>();
 
 builder.Services.AddCors((options) =>
     options.AddPolicy("AllowAll", (policy) =>

@@ -5,16 +5,19 @@ namespace Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
+using Sonaris.Domain.Infrastructure.Paging;
 using Sonaris.Domain.Infrastructure.Response;
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;
+using Sonaris.Services.Search;
 
 [Route("api/Musica/[action]")]
-public class MusicaController(IArquivoService arquivoService, IMusicMetadataReader musicMetadataReader, IMusicMetadataWriter musicMetadataWriter, IConfiguration configuration) : BaseController
+public class MusicaController(IArquivoService arquivoService, IMusicMetadataReader musicMetadataReader, IMusicMetadataWriter musicMetadataWriter, IConfiguration configuration, IMusicSearchService musicSearchService) : BaseController
 {
     private readonly IArquivoService arquivoService = arquivoService ?? throw new ArgumentNullException(nameof(arquivoService));
     private readonly IMusicMetadataReader musicMetadataReader = musicMetadataReader ?? throw new ArgumentNullException(nameof(musicMetadataReader));
     private readonly IMusicMetadataWriter musicMetadataWriter = musicMetadataWriter ?? throw new ArgumentNullException(nameof(musicMetadataWriter));
+    private readonly IMusicSearchService musicSearchService = musicSearchService ?? throw new ArgumentNullException(nameof(musicSearchService));
     private readonly string MUSIC_PATH = configuration["Settings:MusicPath"] ?? "/Musicas";
 
     [HttpGet]
@@ -183,6 +186,30 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
 
             response.Success = true;
             response.Message = "Metadados atualizados com sucesso.";
+        }
+        catch (Exception ex)
+        {
+            response.MontarErro(ex);
+        }
+
+        return Result(response);
+    }
+
+    [HttpGet]
+    public IActionResult BuscarFullText([FromQuery] string termo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 30)
+    {
+        BasePagedResponse<MusicSearchResult> response = new();
+
+        try
+        {
+            var paged = musicSearchService.Search(termo, pageNumber, pageSize);
+
+            response.Data = [.. paged.Items];
+            response.PageInfo = new PageInfoRequest(paged.PageIndex, paged.PageSize);
+            response.Pages = paged.TotalPages;
+            response.ItemsTotal = paged.TotalCount;
+            response.Success = true;
+            response.Message = "Busca realizada com sucesso.";
         }
         catch (Exception ex)
         {

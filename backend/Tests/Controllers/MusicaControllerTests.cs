@@ -13,6 +13,7 @@ using Sonaris.Domain.Infrastructure.Paging;
 using Sonaris.Domain.Infrastructure.Response;
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;
+using Sonaris.Services.Search;
 using Xunit;
 
 public class MusicaControllerTests : IDisposable
@@ -23,6 +24,7 @@ public class MusicaControllerTests : IDisposable
     private readonly Mock<IArquivoService> _arquivoService;
     private readonly Mock<IMusicMetadataReader> _musicMetadataReader;
     private readonly Mock<IMusicMetadataWriter> _musicMetadataWriter;
+    private readonly Mock<IMusicSearchService> _musicSearchService;
     private readonly Mock<IConfiguration> _configuration;
     private readonly MusicaController _controller;
 
@@ -34,11 +36,12 @@ public class MusicaControllerTests : IDisposable
         _arquivoService = new Mock<IArquivoService>();
         _musicMetadataReader = new Mock<IMusicMetadataReader>();
         _musicMetadataWriter = new Mock<IMusicMetadataWriter>();
+        _musicSearchService = new Mock<IMusicSearchService>();
 
         _configuration = new Mock<IConfiguration>();
         _configuration.Setup(c => c["Settings:MusicPath"]).Returns(_musicPath);
 
-        _controller = new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, _musicMetadataWriter.Object, _configuration.Object);
+        _controller = new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, _musicMetadataWriter.Object, _configuration.Object, _musicSearchService.Object);
     }
 
     public void Dispose()
@@ -65,21 +68,21 @@ public class MusicaControllerTests : IDisposable
     public void Construtor_ArquivoServiceNulo_LancaArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new MusicaController(null, _musicMetadataReader.Object, _musicMetadataWriter.Object, _configuration.Object));
+            new MusicaController(null, _musicMetadataReader.Object, _musicMetadataWriter.Object, _configuration.Object, _musicSearchService.Object));
     }
 
     [Fact]
     public void Construtor_MusicMetadataReaderNulo_LancaArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new MusicaController(_arquivoService.Object, null, _musicMetadataWriter.Object, _configuration.Object));
+            new MusicaController(_arquivoService.Object, null, _musicMetadataWriter.Object, _configuration.Object, _musicSearchService.Object));
     }
 
     [Fact]
     public void Construtor_MusicMetadataWriterNulo_LancaArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, null, _configuration.Object));
+            new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, null, _configuration.Object, _musicSearchService.Object));
     }
 
     [Fact]
@@ -88,7 +91,7 @@ public class MusicaControllerTests : IDisposable
         var config = new Mock<IConfiguration>();
         config.Setup(c => c["Settings:MusicPath"]).Returns((string)null);
 
-        var controller = new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, _musicMetadataWriter.Object, config.Object);
+        var controller = new MusicaController(_arquivoService.Object, _musicMetadataReader.Object, _musicMetadataWriter.Object, config.Object, _musicSearchService.Object);
 
         var campo = typeof(MusicaController).GetField("MUSIC_PATH", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.Equal("/Musicas", campo.GetValue(controller));

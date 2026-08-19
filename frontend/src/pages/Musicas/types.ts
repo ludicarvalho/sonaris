@@ -15,3 +15,34 @@ export interface MusicMetadata {
   Duration: string | null;
   Bitrate: number | null;
 }
+
+export interface MusicSearchResult {
+  Id: number;
+  Title: string;
+  Artist: string;
+  Album: string;
+  Filename: string;
+  RelativePath: string;
+  Rank: number;
+  Snippet: string;
+  MatchSource: string;
+}
+
+export interface Playlist {
+  Id: string;
+  Name: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+  Tracks: PlaylistTrack[];
+}
+
+export interface PlaylistTrack {
+  Id: number;
+  PlaylistId: string;
+  RelativePath: string;
+  Title: string;
+  Artist: string;
+  Album: string;
+  Position: number;
+  AddedAt: string;
+}
