@@ -10,15 +10,14 @@ namespace Sonaris.Backend.Tests.Services;
 
 public class PlaylistServiceTests : TestesBase, IDisposable
 {
-    private readonly string _dbPath;
     private readonly PlaylistService _service;
 
     public PlaylistServiceTests() : base("playlist")
     {
         var config = new Mock<IConfiguration>();
-        config.Setup(c => c["Settings:DatabasePath"]).Returns(_dbPath);
+        config.Setup(c => c["Settings:DatabasePath"]).Returns(DbPath);
 
-        DatabaseSchema.EnsureCreated($"Data Source={_dbPath}");
+        DatabaseSchema.EnsureCreated($"Data Source={DbPath}");
         _service = new PlaylistService(config.Object);
     }
 
@@ -198,7 +197,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
 
         _service.ReorderTrack(playlist.Id, track2.Id, 99);
 
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
         var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT position FROM playlist_track WHERE id = @id";
