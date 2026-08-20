@@ -1,9 +1,11 @@
+using System;
+using System.Threading;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using Sonaris.Services.Search;
 
 namespace Sonaris.Backend.Tests.Services;
-
-using Sonaris.Services.Search;
 
 public abstract class TestesBase : IDisposable
 {
@@ -24,17 +26,25 @@ public abstract class TestesBase : IDisposable
     {
         if (File.Exists(DbPath))
         {
-            // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
                 try
                 {
+                    using var connection = new SqliteConnection($"Data Source={DbPath}");
+                    connection.Open();
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "PRAGMA locking_mode = exclusive";
+                    command.ExecuteNonQuery();
                     File.Delete(DbPath);
                     return;
                 }
                 catch (IOException)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(50);
+                }
+                catch (SqliteException)
+                {
+                    Thread.Sleep(50);
                 }
             }
         }
