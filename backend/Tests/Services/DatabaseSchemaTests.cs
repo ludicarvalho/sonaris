@@ -23,7 +23,7 @@ public class DatabaseSchemaTests : IDisposable
     private string ConnectionString => $"Data Source={_dbPath}";
 
     [Fact]
-    public void EnsureCreated_CriaTabelas音乐_E_Playlist()
+    public void EnsureCreated_CriaTabelas_E_Playlist()
     {
         DatabaseSchema.EnsureCreated(ConnectionString);
 
