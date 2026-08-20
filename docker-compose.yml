@@ -9,10 +9,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=7071
       - Settings__MusicPath=/Musicas
+      - Settings__DatabasePath=/data/sonaris.db
     ports:
       - "${BACKEND_PORT:-5033}:7071"
     volumes:
       - "${MUSIC_PATH:-/home/luiz/Músicas}:/Musicas:rw"
+      - "${SONARIS_DATA_DIR:-~/sonaris/database}:/data"
 
   sonaris-frontend:
     container_name: sonaris-frontend
