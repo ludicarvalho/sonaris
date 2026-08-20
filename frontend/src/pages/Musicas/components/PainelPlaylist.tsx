@@ -5,10 +5,11 @@ import type { FileSystemItem } from '../types';
 import { removerExensaoArquivo } from '../../../utils/text';
 
 interface IPainelPlaylist {
+    currentTrack: import('../types').FileSystemItem | null;
     onPlayTrack: (item: FileSystemItem) => void;
 }
 
-export function PainelPlaylist({ onPlayTrack }: IPainelPlaylist) {
+export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
     const { playlistAtiva, setPlaylistAtiva, removerFaixa, renomear, deletar } = usePlaylist();
     const [editandoNome, setEditandoNome] = useState(false);
     const [novoNome, setNovoNome] = useState('');
@@ -111,17 +112,19 @@ export function PainelPlaylist({ onPlayTrack }: IPainelPlaylist) {
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                        {tracks.map((track) => (
-                            <div
-                                key={track.Id}
-                                className="flex items-center gap-2 px-3 py-2 group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
-                            >
+                        {tracks.map((track) => {
+                            const isPlaying = currentTrack?.RelativePath === track.RelativePath;
+                            return (
+                                <div
+                                    key={track.Id}
+                                    className={`flex items-center gap-2 px-3 py-2 group transition-colors ${isPlaying ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+                                >
                                 <GripVertical size={14} className="shrink-0 text-slate-300 dark:text-slate-600 cursor-grab" />
                                 <button
                                     onClick={() => aoPlayTrack(track.RelativePath)}
                                     className="flex-1 min-w-0 text-left"
                                 >
-                                    <span className="block text-sm text-slate-700 dark:text-slate-300 truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                    <span className={`block text-sm truncate transition-colors ${isPlaying ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>
                                         {track.Title || removerExensaoArquivo(track.RelativePath.split('/').pop() ?? '')}
                                     </span>
                                     {track.Artist && (
@@ -138,7 +141,8 @@ export function PainelPlaylist({ onPlayTrack }: IPainelPlaylist) {
                                     <X size={13} />
                                 </button>
                             </div>
-                        ))}
+                        );
+                        })}
                     </div>
                 )}
             </div>

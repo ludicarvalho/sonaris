@@ -32,6 +32,7 @@ function MusicasInner() {
     const [totalItems, setTotalItems] = useState(0);
     const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
     const [menuPlaylistsAberto, setMenuPlaylistsAberto] = useState(false);
+    const [faixasPlaylist, setFaixasPlaylist] = useState<FileSystemItem[] | null>(null);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -126,6 +127,7 @@ function MusicasInner() {
         if (item.IsDirectory) {
             navigateTo(item.RelativePath);
         } else {
+            setFaixasPlaylist(null);
             setCurrentTrack(item);
         }
     };
@@ -142,16 +144,18 @@ function MusicasInner() {
             Size: null,
             LastModified: '',
         };
+        setFaixasPlaylist(null);
         setCurrentTrack(fakeItem);
     };
 
     const faixas = items.filter(item => !item.IsDirectory);
-    const faixaAtualIdx = faixas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
+    const faixasAtivas = faixasPlaylist ?? faixas;
+    const faixaAtualIdx = faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
 
     const irParaFaixa = (delta: number) => {
-        const idx = faixas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
+        const idx = faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
         const proxima = idx + delta;
-        if (proxima >= 0 && proxima < faixas.length) setCurrentTrack(faixas[proxima]);
+        if (proxima >= 0 && proxima < faixasAtivas.length) setCurrentTrack(faixasAtivas[proxima]);
     };
 
     const handleUp = () => {
@@ -252,7 +256,21 @@ function MusicasInner() {
 
                 {playlistAtiva && (
                     <div className="mb-4">
-                        <PainelPlaylist onPlayTrack={setCurrentTrack} />
+                        <PainelPlaylist
+                            currentTrack={currentTrack}
+                            onPlayTrack={(item) => {
+                                setFaixasPlaylist(
+                                    playlistAtiva.Tracks.map(t => ({
+                                        Name: t.RelativePath.split('/').pop() ?? '',
+                                        RelativePath: t.RelativePath,
+                                        IsDirectory: false,
+                                        Size: null,
+                                        LastModified: '',
+                                    }))
+                                );
+                                setCurrentTrack(item);
+                            }}
+                        />
                     </div>
                 )}
 
@@ -277,7 +295,7 @@ function MusicasInner() {
                     onPrev={() => irParaFaixa(-1)}
                     onNext={() => irParaFaixa(1)}
                     hasPrev={faixaAtualIdx > 0}
-                    hasNext={faixaAtualIdx >= 0 && faixaAtualIdx < faixas.length - 1}
+                    hasNext={faixaAtualIdx >= 0 && faixaAtualIdx < faixasAtivas.length - 1}
                 />
             )}
 
