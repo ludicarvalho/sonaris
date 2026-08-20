@@ -1,12 +1,12 @@
 # Sonaris
 
-Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por uma API simples (sem autenticação) e um frontend com player, rodando via Docker Compose.
+Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por uma API (sem autenticação) e um frontend com player, rodando via Docker Compose.
 
 ## Stack
 
-- **Backend**: ASP.NET Core 8 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG e extração de capa (embutida na ID3v2 ou imagem no diretório).
-- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca (scroll infinito) e player com capa (embutida ou imagem da pasta), volume, atalhos de teclado, layout responsivo e detalhes expansíveis com edição de metadados (título, artista, álbum, faixa, ano) e capa — salvos direto do player (o botão Voltar do navegador fecha os detalhes no mobile).
-- **Infra**: Docker Compose (backend + nginx servindo o frontend).
+- **Backend**: ASP.NET Core 10 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG, extração de capa, busca full-text FTS5 híbrida (unicode61 + trigram), playlists persistidas em SQLite e scan automático de músicas em background.
+- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca full-text, player com capa, volume, atalhos de teclado, layout responsivo, detalhes expansíveis com edição de metadados e capa, e sistema de playlists com criação/renomeação/exclusão/reordenação de faixas.
+- **Infra**: Docker Compose (backend + nginx servindo o frontend), SQLite via bind mount.
 
 ## Estrutura
 
@@ -14,9 +14,12 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 Sonaris/
 ├── Sonaris.sln            # Solução (backend + testes + frontend.esproj)
 ├── docker-compose.yml     # Orquestra backend + frontend
-├── backend/               # API .NET 8 (Controllers, Services, parser de metadados)
-│   └── Tests/             # Projeto de testes (xunit + Moq)
-└── frontend/              # React/Vite (página de músicas e player) + frontend.esproj
+├── .env                   # Configurações (não versionado)
+├── backend/               # API .NET 10 (Controllers, Services, parser de metadados)
+│   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicIndexerBackgroundService
+│   ├── Services/Playlists/# PlaylistService (CRUD + reordenação)
+│   └── Tests/             # Testes unitários (xUnit + Moq) — 99 testes
+└── frontend/              # React/Vite (página de músicas, player e playlists)
 ```
 
 ## Requisitos
@@ -53,20 +56,23 @@ As configurações ficam em um `.env` na **raiz do projeto** (o Docker Compose l
 cp .env.example .env
 ```
 
-| Variável       | Padrão              | Descrição                                             |
-| -------------- | ------------------- | ----------------------------------------------------- |
-| `VITE_API_URL` | *(vazio)*           | URL da API. **Vazio = mesma origem** (o nginx do frontend faz proxy do `/api` para o backend) |
-| `MUSIC_PATH`   | `/home/luiz/Músicas` | Pasta no host com a coleção de MP3 |
-| `BACKEND_PORT` | `5033`              | Porta do host para a API |
-| `FRONTEND_PORT`| `3003`              | Porta do host para o frontend |
+| Variável           | Padrão              | Descrição                                             |
+| ------------------ | ------------------- | ----------------------------------------------------- |
+| `VITE_API_URL`     | *(vazio)*           | URL da API. **Vazio = mesma origem** (nginx faz proxy do `/api` para o backend) |
+| `MUSIC_PATH`       | `/home/luiz/Músicas` | Pasta no host com a coleção de MP3 |
+| `BACKEND_PORT`     | `5033`              | Porta do host para a API |
+| `FRONTEND_PORT`    | `3003`              | Porta do host para o frontend |
+| `SONARIS_DATA_DIR` | `~/sonaris/database` | Diretório no host para persistir o banco SQLite |
 
-A pasta de músicas é montada no container em `/Musicas` e pode ser **escrita** para permitir a edição de metadados pelo próprio Sonaris (o container altera apenas as tags ID3/capa dos MP3).
+A pasta de músicas é montada no container em `/Musicas` e pode ser **escrita** para permitir a edição de metadados pelo próprio Sonaris.
+
+O banco SQLite é persistido em `~/sonaris/database/sonaris.db` via bind mount — os dados sobrevivem a `docker compose down` e `up`.
 
 > O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`.
 
 ## API
 
-Endpoints disponíveis (prefixo `/api/Musica`):
+### Músicas (prefixo `/api/Musica`)
 
 | Ação         | Método | Endpoint                                                |
 | ------------ | ------ | ------------------------------------------------------- |
@@ -74,26 +80,45 @@ Endpoints disponíveis (prefixo `/api/Musica`):
 | Stream       | GET    | `/api/Musica/StreamArquivo?fileName=<caminho.mp3>`      |
 | Metadados    | GET    | `/api/Musica/BuscarMusicaMetadata?fileName=<caminho.mp3>` |
 | Capa         | GET    | `/api/Musica/StreamCapa?fileName=<caminho.mp3>`         |
-| Editar metadados | POST   | `/api/Musica/EditarMetadados` (multipart: `fileName`, `title`, `artist`, `album`, `track`, `year`, `removerCapa`, `capa`) |
+| Editar metadados | POST   | `/api/Musica/EditarMetadados` (multipart) |
+| Busca FTS5   | GET    | `/api/Musica/BuscarFullText?termo=<termo>`              |
 
-A edição de metadados usa as ferramentas `mid3v2` (campos de texto) e `eyeD3` (capa embutida/APIC), instaladas na imagem do backend — os mesmos utilitários usados manualmente no host. Durante a gravação o player pausa e retoma automaticamente.
+A busca full-text usa um índice híbrido SQLite FTS5:
+- `music_fts` (unicode61) — busca por título, artista, álbum e filename
+- `music_path_fts` (trigram) — busca por caminho relativo (substrings)
 
-O endpoint de stream suporta requisições com header `Range` (respostas HTTP 206).
+Resultados duplicados de ambas as tabelas são deduplicados via CTEs com `ROW_NUMBER()`.
+
+O indexer roda automaticamente no startup e a cada 5 minutos, indexando todas as músicas encontradas no diretório configurado.
+
+### Playlists (prefixo `/api/Playlist`)
+
+| Ação             | Método | Endpoint                                      |
+| ---------------- | ------ | --------------------------------------------- |
+| Listar           | GET    | `/api/Playlist`                               |
+| Criar            | POST   | `/api/Playlist` (body: nome)                  |
+| Renomear         | PUT    | `/api/Playlist/{id}?novoNome=<nome>`          |
+| Deletar          | DELETE | `/api/Playlist/{id}`                          |
+| Detalhes         | GET    | `/api/Playlist/{id}`                          |
+| Adicionar faixa  | POST   | `/api/Playlist/{id}/tracks` (body: relativePath) |
+| Remover faixa    | DELETE | `/api/Playlist/{id}/tracks/{trackId}`         |
+| Reordenar faixa  | PUT    | `/api/Playlist/{id}/tracks/{trackId}/reorder` |
+| Duplicar         | POST   | `/api/Playlist/{id}/duplicate?novoNome=<nome>` |
+
+Playlists são referenciadas por `relativePath` — se uma música for renomeada/movida, a referência na playlist quebra (tradeoff aceito).
+
+Nomes duplicados são impedidos pelo backend (tanto em criação quanto renomeação).
 
 ### Capa da música
 
 A capa é buscada na ordem:
 
 1. **Imagem embutida** na tag ID3v2 da própria música.
-2. Se não houver, uma **imagem no mesmo diretório** da música — a primeira encontrada entre `.jpg`, `.jpeg` e `.png` (ex.: `folder.jpg`).
-
-Se nenhuma imagem for encontrada, o endpoint retorna erro 400 (`Capa não encontrada`).
+2. Se não houver, uma **imagem no mesmo diretório** — a primeira encontrada entre `.jpg`, `.jpeg` e `.png` (ex.: `folder.jpg`).
 
 ### Como a API é acessada
 
-O nginx do container do frontend faz **proxy** de todas as chamadas `/api/*` para o backend (serviço `sonaris-backend:7071`). Por isso o `VITE_API_URL` fica **vazio** por padrão: o browser chama a mesma origem do frontend e funciona em qualquer máquina, sem configurar IP. O backend também continua exposto na porta do host (`BACKEND_PORT`) para acesso direto (Swagger, testes).
-
-Só use uma URL completa no `VITE_API_URL` se estiver servindo o frontend **sem** proxy (ex.: o build servido por um servidor estático que não faz proxy do `/api`).
+O nginx do container do frontend faz **proxy** de todas as chamadas `/api/*` para o backend (serviço `sonaris-backend:7071`). O `VITE_API_URL` fica **vazio** por padrão: o browser chama a mesma origem do frontend. O backend também continua exposto na porta do host (`BACKEND_PORT`) para acesso direto (Swagger, testes).
 
 ## Desenvolvimento local
 
@@ -103,21 +128,19 @@ O `Sonaris.sln` já inclui o `frontend/frontend.esproj`, então o F5 consegue ro
 
 1. Abra o `Sonaris.sln` no Visual Studio 2022.
 2. **Configure Startup Projects**: clique com o botão direito na solução → *Configure Startup Projects…* → escolha **Multiple startup projects** → defina **`Sonaris.Backend`** e **`frontend`** como **Start** (nessa ordem).
-3. Aperte **F5**. O backend sobe em `http://localhost:7071` e o frontend (Vite) em `http://localhost:5173` — abra esse endereço no navegador.
+3. Aperte **F5**. O backend sobe em `http://localhost:7071` e o frontend (Vite) em `http://localhost:5174` — abra esse endereço no navegador.
 
 > Esse ajuste é uma configuração local do VS (fica em `.vs/`, não versionado) — só precisa ser feito uma vez.
 
-O Vite tem um **proxy** de `/api/*` para o backend em `http://localhost:7071` (configurado em `frontend/vite.config.ts`), então o frontend funciona sem `VITE_API_URL` (mesma origem), igual ao nginx em produção.
+O Vite tem um **proxy** de `/api/*` para o backend em `http://localhost:7071` (configurado em `frontend/vite.config.ts`).
 
 ### Frontend (só o front, sem o VS)
 
 ```bash
 cd frontend
 npm install
-npm run dev      # Vite em http://localhost:5173
+npm run dev      # Vite em http://localhost:5174
 ```
-
-A API é acessada pelo proxy do Vite (`/api` → `http://localhost:7071`). Se o backend estiver em outra porta, ajuste o `target` em `frontend/vite.config.ts`.
 
 ### Backend
 
@@ -127,7 +150,14 @@ dotnet restore
 dotnet run --project Sonaris.Backend.csproj
 ```
 
-Defina a pasta de músicas em `appsettings.json` (`Settings:MusicPath`). Em dev via F5, o backend sobe em `http://localhost:7071` (configurado em `Properties/launchSettings.json`).
+## Testes
+
+```bash
+cd backend
+dotnet test
+```
+
+99 testes unitários cobrindo: schema FTS5, MusicSearchService, PlaylistService, PlaylistController e MusicaController.
 
 ## Lint
 
