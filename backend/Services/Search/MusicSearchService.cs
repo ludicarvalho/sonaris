@@ -44,11 +44,10 @@ public class MusicSearchService : IMusicSearchService
                 UNION ALL
                 SELECT m.id FROM music_path_fts fts
                 JOIN music m ON m.id = fts.rowid
-                WHERE music_path_fts MATCH @queryWrapped
+                WHERE music_path_fts MATCH @query
             )
             """;
         countCmd.Parameters.AddWithValue("@query", sanitizedQuery);
-        countCmd.Parameters.AddWithValue("@queryWrapped", $"\"{query.Trim()}\"");
         var totalCount = Convert.ToInt32(countCmd.ExecuteScalar());
 
         var searchCmd = connection.CreateCommand();
@@ -72,13 +71,12 @@ public class MusicSearchService : IMusicSearchService
                        'path' AS match_source
                 FROM music_path_fts fts
                 JOIN music m ON m.id = fts.rowid
-                WHERE music_path_fts MATCH @queryWrapped
+                WHERE music_path_fts MATCH @query
             )
             ORDER BY rank
             LIMIT @limit OFFSET @offset
             """;
         searchCmd.Parameters.AddWithValue("@query", sanitizedQuery);
-        searchCmd.Parameters.AddWithValue("@queryWrapped", $"\"{query.Trim()}\"");
         searchCmd.Parameters.AddWithValue("@limit", pageSize);
         searchCmd.Parameters.AddWithValue("@offset", offset);
 
@@ -133,6 +131,14 @@ public class MusicSearchService : IMusicSearchService
             .Replace("}", "")
             .Replace(":", "")
             .Replace("^", "")
+            .Replace("!", "")
+            .Replace("*", "")
+            .Replace("+", "")
+            .Replace("-", "")
+            .Replace("~", "")
+            .Replace("<", "")
+            .Replace(">", "")
+            .Replace("&", "")
             .Trim();
 
         if (string.IsNullOrEmpty(cleaned))

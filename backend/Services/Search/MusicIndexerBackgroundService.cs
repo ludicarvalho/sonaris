@@ -140,7 +140,20 @@ public class MusicIndexerBackgroundService : BackgroundService
 
         transaction.Commit();
 
+        await RebuildPathFtsAsync(connection, ct);
+
         _logger.LogInformation("Scan concluído: {Success} indexadas, {Errors} erros, {Removed} removidas",
             successCount, errorCount, Math.Max(0, files.Count - successCount));
+    }
+
+    private static async Task RebuildPathFtsAsync(SqliteConnection connection, CancellationToken ct)
+    {
+        var rebuildCmd = connection.CreateCommand();
+        rebuildCmd.CommandText = """
+            DELETE FROM music_path_fts;
+            INSERT INTO music_path_fts(rowid, filename, relative_path)
+            SELECT id, filename, relative_path FROM music;
+            """;
+        await rebuildCmd.ExecuteNonQueryAsync(ct);
     }
 }

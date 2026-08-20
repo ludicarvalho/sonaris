@@ -38,8 +38,7 @@ public static class DatabaseSchema
             -- Índice FTS5 trigram — busca por substring em filename/caminho
             CREATE VIRTUAL TABLE IF NOT EXISTS music_path_fts USING fts5(
                 filename, relative_path,
-                tokenize='trigram',
-                detail='none'
+                tokenize='trigram'
             );
 
             -- Triggers de sincronização automática (music_fts)
@@ -61,21 +60,11 @@ public static class DatabaseSchema
             END;
 
             -- Triggers de sincronização automática (music_path_fts)
+            -- Obs: trigram FTS5 não suporta 'delete' incremental.
+            -- O indexer faz rebuild completo de music_path_fts a cada scan.
             CREATE TRIGGER IF NOT EXISTS music_path_fts_insert AFTER INSERT ON music BEGIN
                 INSERT INTO music_path_fts(rowid, filename, relative_path)
                 VALUES (new.id, new.filename, new.relative_path);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS music_path_fts_update AFTER UPDATE ON music BEGIN
-                INSERT INTO music_path_fts(music_path_fts, rowid, filename, relative_path)
-                VALUES ('delete', old.id, old.filename, old.relative_path);
-                INSERT INTO music_path_fts(rowid, filename, relative_path)
-                VALUES (new.id, new.filename, new.relative_path);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS music_path_fts_delete AFTER DELETE ON music BEGIN
-                INSERT INTO music_path_fts(music_path_fts, rowid, filename, relative_path)
-                VALUES ('delete', old.id, old.filename, old.relative_path);
             END;
 
             -- Tabela de playlists
