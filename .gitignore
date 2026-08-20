@@ -25,6 +25,7 @@ BenchmarkDotNet.Artifacts/
 project.nuget.cache
 *.nuget.props
 *.nuget.targets
+launchSettings.json
 
 # =========================
 # IDE / Editor
