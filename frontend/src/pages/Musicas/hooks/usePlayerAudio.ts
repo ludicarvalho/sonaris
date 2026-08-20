@@ -103,7 +103,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         audio.volume = volume;
         audio.muted = mudo;
         audio.play().catch(() => { });
-    }, [track, volume, mudo]);
+    }, [track]);
 
     const audioProps = {
         ref: audioRef,
