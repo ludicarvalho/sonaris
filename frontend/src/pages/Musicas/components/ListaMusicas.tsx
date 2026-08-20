@@ -2,6 +2,9 @@ import { AudioLines, Folder, FolderUp, Loader2, Music2, Search } from "lucide-re
 import type { RefObject } from "react";
 import type { FileSystemItem } from "../types";
 import { formatarData, formatarTamanho } from "../utils";
+import { removerExensaoArquivo } from '../../../utils/text';
+import { AddToPlaylistButton } from "./AddToPlaylistButton";
+import { card } from '../styles';
 
 interface IListaMusicas {
     items: FileSystemItem[];
@@ -29,7 +32,7 @@ export function ListaMusicas({
     onUp,
 }: IListaMusicas) {
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className={card}>
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
@@ -37,12 +40,13 @@ export function ListaMusicas({
                             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Nome</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tamanho</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Modificado em</th>
+                            <th className="w-10"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                         {!isRoot && (
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={onUp}>
-                                <td colSpan={3} className="px-4 py-3">
+                                <td colSpan={4} className="px-4 py-3">
                                     <span className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 font-medium">
                                         <FolderUp size={18} className="shrink-0" />
                                         Voltar
@@ -54,21 +58,21 @@ export function ListaMusicas({
                         {loading ? (
                             Array.from({ length: 6 }).map((_, i) => (
                                 <tr key={i}>
-                                    <td colSpan={3} className="px-4 py-3">
+                                    <td colSpan={4} className="px-4 py-3">
                                         <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : items.length === 0 ? (
                             <tr>
-                                <td colSpan={3} className="px-4 py-12 text-center text-slate-400">
+                                <td colSpan={4} className="px-4 py-12 text-center text-slate-400">
                                     <Search size={32} className="mx-auto mb-2 opacity-30" />
                                     Nenhum arquivo ou pasta encontrado
                                 </td>
                             </tr>
                         ) : items.map(item => {
                             const isPlaying = !item.IsDirectory && currentTrack?.RelativePath === item.RelativePath;
-                            const nomeExibicao = item.IsDirectory ? item.Name : item.Name.replace(/\.[^/.]+$/, '');
+                            const nomeExibicao = item.IsDirectory ? item.Name : removerExensaoArquivo(item.Name);
 
                             return (
                                 <tr
@@ -99,6 +103,13 @@ export function ListaMusicas({
                                     </td>
                                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono">
                                         {formatarData(item.LastModified)}
+                                    </td>
+                                    <td className="px-2 py-3">
+                                        {!item.IsDirectory && (
+                                            <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <AddToPlaylistButton relativePath={item.RelativePath} />
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             );

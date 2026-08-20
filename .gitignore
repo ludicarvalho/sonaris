@@ -44,6 +44,8 @@ Thumbs.db
 node_modules/
 frontend/dist/
 frontend/build/
+frontend/obj/
+frontend/bin/
 *.tsbuildinfo
 
 # =========================
