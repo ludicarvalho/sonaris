@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Loader2, Pencil, Save, X } from "lucide-react";
+import { ListPlus, Loader2, Pencil, Save, X } from "lucide-react";
 import { Capa } from "./Capa";
 import { formatarDuracao, formatarTamanho } from "../../utils";
+import { AdicionarPlaylistMenu } from "../AdicionarPlaylistMenu";
+import { CriarPlaylistDialog } from "../CriarPlaylistDialog";
+import { usePlaylist } from "../../../../hooks/usePlaylist";
 import type { EditarMetadadosParams } from "../../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../../types";
 
@@ -23,12 +26,15 @@ interface ICamposEdicao {
 }
 
 export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, track, onSalvarMetadados }: IDetalhesExpandidos) {
+    const { criar } = usePlaylist();
     const [editando, setEditando] = useState(false);
     const [campos, setCampos] = useState<ICamposEdicao>({ titulo: "", artista: "", album: "", faixa: "", ano: "" });
     const [novaCapa, setNovaCapa] = useState<File | null>(null);
     const [removerCapa, setRemoverCapa] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState("");
+    const [menuAberto, setMenuAberto] = useState(false);
+    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
 
     const entrarEmEdicao = () => {
         setCampos({
@@ -99,15 +105,33 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                                 </p>
                             </div>
                             {!editando && (
-                                <button
-                                    type="button"
-                                    onClick={entrarEmEdicao}
-                                    title="Editar metadados"
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shrink-0"
-                                >
-                                    <Pencil size={14} />
-                                    Editar
-                                </button>
+                                <div className="flex items-center gap-2 shrink-0 relative">
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMenuAberto(!menuAberto)}
+                                            title="Adicionar a playlist"
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                        >
+                                            <ListPlus size={14} />
+                                        </button>
+                                        <AdicionarPlaylistMenu
+                                            relativePath={track.RelativePath}
+                                            aberto={menuAberto}
+                                            onFechar={() => setMenuAberto(false)}
+                                            onCriarPlaylist={() => { setMenuAberto(false); setDialogCriarAberto(true); }}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={entrarEmEdicao}
+                                        title="Editar metadados"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                    >
+                                        <Pencil size={14} />
+                                        Editar
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -207,6 +231,12 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                     </div>
                 </div>
             </div>
+
+            <CriarPlaylistDialog
+                aberto={dialogCriarAberto}
+                onFechar={() => setDialogCriarAberto(false)}
+                onCriar={async (nome) => { await criar(nome); }}
+            />
         </div>
     );
 }
