@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { GripVertical, ListMusic, Music, Pencil, Trash2, X } from 'lucide-react';
 import { usePlaylist } from '../../../hooks/usePlaylist';
-import type { FileSystemItem } from '../types';
+import type { FileSystemItem, PlaylistTrack } from '../types';
+import { arquivoDePath } from '../types';
 import { removerExensaoArquivo } from '../../../utils/text';
+import { card } from '../styles';
 
 interface IPainelPlaylist {
-    currentTrack: import('../types').FileSystemItem | null;
+    currentTrack: FileSystemItem | null;
     onPlayTrack: (item: FileSystemItem) => void;
 }
 
@@ -16,7 +18,7 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
 
     if (!playlistAtiva) return null;
 
-    const tracks: import('../types').PlaylistTrack[] = playlistAtiva.Tracks;
+    const tracks: PlaylistTrack[] = playlistAtiva.Tracks;
 
     const iniciarEdicao = () => {
         setNovoNome(playlistAtiva.Name);
@@ -38,18 +40,11 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
     };
 
     const aoPlayTrack = (relativePath: string) => {
-        const fakeItem: FileSystemItem = {
-            Name: relativePath.split('/').pop() ?? '',
-            RelativePath: relativePath,
-            IsDirectory: false,
-            Size: null,
-            LastModified: '',
-        };
-        onPlayTrack(fakeItem);
+        onPlayTrack(arquivoDePath(relativePath));
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className={card}>
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                 <ListMusic size={18} className="shrink-0 text-blue-500" />
                 <div className="min-w-0 flex-1">

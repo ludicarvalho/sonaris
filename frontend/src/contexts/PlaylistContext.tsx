@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Playlist } from '../pages/Musicas/types';
 import * as playlistService from '../pages/Musicas/services/playlist.service';
 
@@ -23,6 +23,11 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [loading, setLoading] = useState(true);
     const [playlistAtiva, setPlaylistAtiva] = useState<Playlist | null>(null);
+    const playlistAtivaRef = useRef<Playlist | null>(null);
+
+    useEffect(() => {
+        playlistAtivaRef.current = playlistAtiva;
+    }, [playlistAtiva]);
 
     const recarregar = useCallback(async () => {
         setLoading(true);
@@ -31,15 +36,16 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
             const data = res.data.Data;
             if (data) {
                 setPlaylists(data);
-                if (playlistAtiva) {
-                    const atualizada = data.find((p: Playlist) => p.Id === playlistAtiva.Id) ?? null;
+                const atual = playlistAtivaRef.current;
+                if (atual) {
+                    const atualizada = data.find((p: Playlist) => p.Id === atual.Id) ?? null;
                     setPlaylistAtiva(atualizada);
                 }
             }
         } finally {
             setLoading(false);
         }
-    }, [playlistAtiva]);
+    }, []);
 
     useEffect(() => {
         recarregar();

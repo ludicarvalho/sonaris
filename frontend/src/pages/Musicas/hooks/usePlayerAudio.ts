@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { lerMudoInicial, lerVolumeInicial, salvarMudo, salvarVolume } from "../utils";
 import { streamUrl } from "../services/musicas.service";
 import type { FileSystemItem } from "../types";
+import { usePlayerKeyboard } from "./usePlayerKeyboard";
 
 export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext: boolean, onPrev: () => void, onNext: () => void, onClose: () => void) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -12,6 +13,8 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
     const [buffer, setBuffer] = useState(0);
     const [volume, setVolume] = useState<number>(lerVolumeInicial);
     const [mudo, setMudo] = useState<boolean>(lerMudoInicial);
+
+    usePlayerKeyboard({ audioRef, hasPrev, hasNext, onPrev, onNext, onClose });
 
     const alternarPlayPause = () => {
         const audio = audioRef.current;
@@ -91,69 +94,16 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         salvarMudo(audio.muted);
     };
 
-    // Atalhos de teclado enquanto o tocador está aberto
-    useEffect(() => {
-        const aoTeclar = (e: KeyboardEvent) => {
-            const alvo = e.target as HTMLElement | null;
-            if (
-                alvo &&
-                (alvo instanceof HTMLInputElement ||
-                 alvo instanceof HTMLTextAreaElement ||
-                 alvo instanceof HTMLSelectElement ||
-                 alvo.isContentEditable)
-            ) {
-                return;
-            }
-
-            const audio = audioRef.current;
-            if (!audio) return;
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (audio.paused) audio.play().catch(() => { });
-                else audio.pause();
-            }
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                audio.currentTime += 5;
-            }
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                audio.currentTime -= 5;
-            }
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                audio.volume = Math.min(1, audio.volume + 0.1);
-            }
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                audio.volume = Math.max(0, audio.volume - 0.1);
-            }
-            if (e.key === 'm' || e.key === 'M') audio.muted = !audio.muted;
-            if (e.code === 'Numpad4' && e.key === '4') {
-                e.preventDefault();
-                if (hasPrev) onPrev();
-            }
-            if (e.code === 'Numpad6' && e.key === '6') {
-                e.preventDefault();
-                if (hasNext) onNext();
-            }
-            if (e.key === 'Escape') onClose();
-        };
-
-        window.addEventListener('keydown', aoTeclar);
-        return () => window.removeEventListener('keydown', aoTeclar);
-    }, [hasPrev, hasNext, onPrev, onNext, onClose]);
-
     // Mantém o mesmo elemento <audio> (volume persiste) e só troca a fonte
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
 
         audio.src = streamUrl(track.RelativePath);
-        audio.volume = lerVolumeInicial();
-        audio.muted = lerMudoInicial();
+        audio.volume = volume;
+        audio.muted = mudo;
         audio.play().catch(() => { });
-    }, [track]);
+    }, [track, volume, mudo]);
 
     const audioProps = {
         ref: audioRef,

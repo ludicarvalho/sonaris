@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { ListPlus, Loader2, Pencil, Save, X } from "lucide-react";
+import { Loader2, Pencil, Save, X } from "lucide-react";
 import { Capa } from "./Capa";
 import { formatarDuracao, formatarTamanho } from "../../utils";
-import { AdicionarPlaylistMenu } from "../AdicionarPlaylistMenu";
-import { CriarPlaylistDialog } from "../CriarPlaylistDialog";
-import { usePlaylist } from "../../../../hooks/usePlaylist";
+import { AddToPlaylistButton } from "../AddToPlaylistButton";
 import type { EditarMetadadosParams } from "../../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../../types";
 
@@ -25,16 +23,22 @@ interface ICamposEdicao {
     ano: string;
 }
 
+function MetaCard({ label, value, title }: { label: string; value: string; title?: string }) {
+    return (
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+            <dt className="text-xs text-slate-400">{label}</dt>
+            <dd className="font-medium truncate" title={title}>{value}</dd>
+        </div>
+    );
+}
+
 export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, track, onSalvarMetadados }: IDetalhesExpandidos) {
-    const { criar } = usePlaylist();
     const [editando, setEditando] = useState(false);
     const [campos, setCampos] = useState<ICamposEdicao>({ titulo: "", artista: "", album: "", faixa: "", ano: "" });
     const [novaCapa, setNovaCapa] = useState<File | null>(null);
     const [removerCapa, setRemoverCapa] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState("");
-    const [menuAberto, setMenuAberto] = useState(false);
-    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
 
     const entrarEmEdicao = () => {
         setCampos({
@@ -105,23 +109,8 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                                 </p>
                             </div>
                             {!editando && (
-                                <div className="flex items-center gap-2 shrink-0 relative">
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMenuAberto(!menuAberto)}
-                                            title="Adicionar a playlist"
-                                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                                        >
-                                            <ListPlus size={14} />
-                                        </button>
-                                        <AdicionarPlaylistMenu
-                                            relativePath={track.RelativePath}
-                                            aberto={menuAberto}
-                                            onFechar={() => setMenuAberto(false)}
-                                            onCriarPlaylist={() => { setMenuAberto(false); setDialogCriarAberto(true); }}
-                                        />
-                                    </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <AddToPlaylistButton relativePath={track.RelativePath} />
                                     <button
                                         type="button"
                                         onClick={entrarEmEdicao}
@@ -202,41 +191,17 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                             </form>
                         ) : (
                             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5 text-sm">
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Álbum</dt>
-                                    <dd className="font-medium truncate" title={metadata?.Album ?? ''}>{metadata?.Album || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Faixa</dt>
-                                    <dd className="font-medium">{metadata?.Track || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Ano</dt>
-                                    <dd className="font-medium">{metadata?.Year || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Duração</dt>
-                                    <dd className="font-medium">{formatarDuracao(metadata?.Duration ?? null) || '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Bitrate</dt>
-                                    <dd className="font-medium">{metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'}</dd>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-                                    <dt className="text-xs text-slate-400">Tamanho</dt>
-                                    <dd className="font-medium">{formatarTamanho(track.Size)}</dd>
-                                </div>
+                                <MetaCard label="Álbum" value={metadata?.Album || '—'} title={metadata?.Album ?? ''} />
+                                <MetaCard label="Faixa" value={metadata?.Track || '—'} />
+                                <MetaCard label="Ano" value={metadata?.Year || '—'} />
+                                <MetaCard label="Duração" value={formatarDuracao(metadata?.Duration ?? null) || '—'} />
+                                <MetaCard label="Bitrate" value={metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'} />
+                                <MetaCard label="Tamanho" value={formatarTamanho(track.Size)} />
                             </dl>
                         )}
                     </div>
                 </div>
             </div>
-
-            <CriarPlaylistDialog
-                aberto={dialogCriarAberto}
-                onFechar={() => setDialogCriarAberto(false)}
-                onCriar={async (nome) => { await criar(nome); }}
-            />
         </div>
     );
 }

@@ -46,3 +46,13 @@ export interface PlaylistTrack {
   Position: number;
   AddedAt: string;
 }
+
+export function arquivoDePath(relativePath: string): FileSystemItem {
+  return {
+    Name: relativePath.split('/').pop() ?? '',
+    RelativePath: relativePath,
+    IsDirectory: false,
+    Size: null,
+    LastModified: '',
+  };
+}

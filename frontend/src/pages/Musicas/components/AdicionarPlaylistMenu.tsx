@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { ListPlus, Plus } from 'lucide-react';
 import { usePlaylist } from '../../../hooks/usePlaylist';
+import { useClickOutside } from '../../../hooks/useClickOutside';
+import { dropdown } from '../styles';
 
 interface IAdicionarPlaylistMenu {
     relativePath: string;
@@ -13,21 +15,14 @@ export function AdicionarPlaylistMenu({ relativePath, aberto, onFechar, onCriarP
     const { playlists, adicionarFaixa } = usePlaylist();
     const menuRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        if (!aberto) return;
-        const aoClicarFora = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                onFechar();
-            }
-        };
-        document.addEventListener('mousedown', aoClicarFora);
-        return () => document.removeEventListener('mousedown', aoClicarFora);
-    }, [aberto, onFechar]);
+    useClickOutside(menuRef, () => {
+        if (aberto) onFechar();
+    });
 
     if (!aberto) return null;
 
     return (
-        <div ref={menuRef} className="absolute right-0 top-full mt-1 z-30 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+        <div ref={menuRef} className={dropdown}>
             <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Adicionar à playlist</span>
             </div>

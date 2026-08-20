@@ -15,7 +15,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
     [HttpGet]
     public IActionResult Listar()
     {
-        BaseResponse<List<PlaylistDto>> response = new();
+        BaseResponse<IEnumerable<PlaylistDto>> response = new();
 
         try
         {

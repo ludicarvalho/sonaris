@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Loader2, ListPlus, Music2, Search, X } from 'lucide-react';
+import { Loader2, Music2, Search, X } from 'lucide-react';
 import { buscarFullText } from '../services/playlist.service';
 import type { MusicSearchResult } from '../types';
+import { pastaDe } from '../utils';
 import { removerExensaoArquivo } from '../../../utils/text';
-import { AdicionarPlaylistMenu } from './AdicionarPlaylistMenu';
-import { CriarPlaylistDialog } from './CriarPlaylistDialog';
-import { usePlaylist } from '../../../hooks/usePlaylist';
+import { useClickOutside } from '../../../hooks/useClickOutside';
+import { AddToPlaylistButton } from './AddToPlaylistButton';
 
 const DEBOUNCE_MS = 600;
 
@@ -14,15 +14,12 @@ interface IBuscadorMusicas {
 }
 
 export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
-    const { criar } = usePlaylist();
     const [termo, setTermo] = useState('');
     const [resultados, setResultados] = useState<MusicSearchResult[]>([]);
     const [buscando, setBuscando] = useState(false);
     const [pesquisado, setPesquisado] = useState(false);
     const [aberto, setAberto] = useState(false);
     const [indiceAtivo, setIndiceAtivo] = useState(-1);
-    const [menuTrackPath, setMenuTrackPath] = useState<string | null>(null);
-    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const itensRef = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -35,15 +32,7 @@ export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
         setIndiceAtivo(-1);
     };
 
-    useEffect(() => {
-        const aoClicarFora = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-                setAberto(false);
-            }
-        };
-        document.addEventListener('mousedown', aoClicarFora);
-        return () => document.removeEventListener('mousedown', aoClicarFora);
-    }, []);
+    useClickOutside(containerRef, () => setAberto(false));
 
     useEffect(() => {
         const aoTeclar = (e: KeyboardEvent) => {
@@ -126,10 +115,6 @@ export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
     };
 
     const termoLimpo = termo.trim();
-    const pastaDe = (item: MusicSearchResult) => {
-        const idx = item.RelativePath.lastIndexOf('/');
-        return idx > 0 ? item.RelativePath.slice(0, idx) : 'Raiz';
-    };
 
     return (
         <div ref={containerRef} className="relative">
@@ -196,32 +181,15 @@ export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
                                                 <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
                                                     {item.Artist && item.Album
                                                         ? `${item.Artist} • ${item.Album}`
-                                                        : pastaDe(item)
+                                                        : pastaDe(item.RelativePath)
                                                     }
                                                 </span>
                                             </span>
                                         </button>
-                                        <div className="relative shrink-0">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setMenuTrackPath(menuTrackPath === item.RelativePath ? null : item.RelativePath);
-                                                }}
-                                                title="Adicionar à playlist"
-                                                className="inline-flex items-center justify-center w-7 h-7 rounded-md text-slate-400 dark:text-slate-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                            >
-                                                <ListPlus size={15} />
-                                            </button>
-                                            <AdicionarPlaylistMenu
-                                                relativePath={item.RelativePath}
-                                                aberto={menuTrackPath === item.RelativePath}
-                                                onFechar={() => setMenuTrackPath(null)}
-                                                onCriarPlaylist={() => {
-                                                    setMenuTrackPath(null);
-                                                    setDialogCriarAberto(true);
-                                                }}
-                                            />
-                                        </div>
+                                        <AddToPlaylistButton
+                                            relativePath={item.RelativePath}
+                                            className="relative shrink-0"
+                                        />
                                     </div>
                                 </li>
                             ))}
@@ -229,14 +197,6 @@ export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
                     )}
                 </div>
             )}
-
-            <CriarPlaylistDialog
-                aberto={dialogCriarAberto}
-                onFechar={() => setDialogCriarAberto(false)}
-                onCriar={async (nome) => {
-                    await criar(nome);
-                }}
-            />
         </div>
     );
 }

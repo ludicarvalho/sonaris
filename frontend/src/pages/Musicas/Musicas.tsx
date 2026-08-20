@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertCircle, ListMusic, Moon, Music4, Plus, Sun } from 'lucide-react';
-import { getMusicas } from './services/musicas.service';
 import type { FileSystemItem } from './types';
+import { arquivoDePath } from './types';
+import { pastaDe } from './utils';
 import { BreadcrumbMusicas } from './components/BreadcrumbMusicas';
 import { BuscadorMusicas } from './components/BuscadorMusicas';
 import { ListaMusicas } from './components/ListaMusicas';
@@ -14,27 +14,20 @@ import { usePageTitle } from '../../hooks/usePageTitle';
 import { useTheme } from '../../contexts/useTheme';
 import { usePlaylist } from '../../hooks/usePlaylist';
 import { removerExensaoArquivo } from '../../utils/text';
-
-const PAGE_SIZE = 30;
+import { dropdown } from './styles';
+import { useFileBrowser } from './hooks/useFileBrowser';
+import { usePlaylistMenu } from './hooks/usePlaylistMenu';
+import { useTrackNavigation } from './hooks/useTrackNavigation';
 
 function MusicasInner() {
     const { theme, toggleTheme } = useTheme();
     const { playlists, playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
     const [searchParams, setSearchParams] = useSearchParams();
     const path = searchParams.get('path') ?? '';
-    const [items, setItems] = useState<FileSystemItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [loadingMore, setLoadingMore] = useState(false);
-    const [error, setError] = useState('');
-    const [currentTrack, setCurrentTrack] = useState<FileSystemItem | null>(null);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
-    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
-    const [menuPlaylistsAberto, setMenuPlaylistsAberto] = useState(false);
-    const [faixasPlaylist, setFaixasPlaylist] = useState<FileSystemItem[] | null>(null);
-    const menuRef = useRef<HTMLDivElement | null>(null);
-    const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+    const { items, loading, loadingMore, hasMore, totalItems, error, sentinelRef } = useFileBrowser(path);
+    const { aberto, setAberto, dialogCriarAberto, setDialogCriarAberto, menuRef } = usePlaylistMenu();
+    const { currentTrack, setCurrentTrack, faixasPlaylist, setFaixasPlaylist, faixaAtualIdx, irParaFaixa } = useTrackNavigation();
 
     const tituloFaixa = currentTrack ? removerExensaoArquivo(currentTrack.Name) : undefined;
     usePageTitle(tituloFaixa);
@@ -43,85 +36,9 @@ function MusicasInner() {
         setSearchParams(p ? { path: p } : {}, { replace: false });
     };
 
-    useEffect(() => {
-        let active = true;
-        setLoading(true);
-        setError('');
-        setItems([]);
-        setPage(1);
-        setTotalPages(1);
-        setTotalItems(0);
-
-        getMusicas(path, 1, PAGE_SIZE)
-            .then((res) => {
-                if (!active) return;
-                const { Data, Success, Message, Pages, ItemsTotal } = res.data;
-                if (Success) {
-                    setItems(Data ?? []);
-                    setTotalPages(Pages);
-                    setTotalItems(ItemsTotal);
-                } else {
-                    setError(Message ?? 'Não foi possível carregar as músicas.');
-                }
-            })
-            .catch((err: any) => {
-                if (!active) return;
-                setError(err?.response?.data?.Message ?? err?.message ?? 'Erro ao conectar com o servidor.');
-            })
-            .finally(() => {
-                if (active) setLoading(false);
-            });
-
-        return () => {
-            active = false;
-        };
-    }, [path]);
-
-    const loadMoreRef = useRef<() => void>(() => { });
-
-    const loadMore = useCallback(() => {
-        if (loading || loadingMore) return;
-        if (page >= totalPages) return;
-
-        setLoadingMore(true);
-        getMusicas(path, page + 1, PAGE_SIZE)
-            .then((res) => {
-                const { Data, Success, Pages, ItemsTotal } = res.data;
-                if (Success) {
-                    setItems(prev => [...prev, ...(Data ?? [])]);
-                    setTotalPages(Pages);
-                    setTotalItems(ItemsTotal);
-                    setPage(p => p + 1);
-                }
-            })
-            .catch(() => { })
-            .finally(() => {
-                setLoadingMore(false);
-                requestAnimationFrame(() => {
-                    const el = sentinelRef.current;
-                    if (el && el.getBoundingClientRect().top <= window.innerHeight) {
-                        loadMoreRef.current();
-                    }
-                });
-            });
-    }, [loading, loadingMore, page, totalPages, path]);
-
-    loadMoreRef.current = loadMore;
-
-    useEffect(() => {
-        const el = sentinelRef.current;
-        if (!el || loading) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) loadMoreRef.current();
-            },
-            { rootMargin: '200px' },
-        );
-        observer.observe(el);
-
-        return () => observer.disconnect();
-    }, [loading, path]);
+    const faixas = items.filter(item => !item.IsDirectory);
+    const faixasAtivas = faixasPlaylist ?? faixas;
+    const idx = faixaAtualIdx(faixasAtivas);
 
     const handleSelect = (item: FileSystemItem) => {
         if (item.IsDirectory) {
@@ -133,46 +50,14 @@ function MusicasInner() {
     };
 
     const handleSelectBusca = (relativePath: string) => {
-        const idx = relativePath.lastIndexOf('/');
-        const pasta = idx > 0 ? relativePath.slice(0, idx) : '';
-        navigateTo(pasta);
-
-        const fakeItem: FileSystemItem = {
-            Name: relativePath.split('/').pop() ?? '',
-            RelativePath: relativePath,
-            IsDirectory: false,
-            Size: null,
-            LastModified: '',
-        };
+        navigateTo(pastaDe(relativePath));
         setFaixasPlaylist(null);
-        setCurrentTrack(fakeItem);
-    };
-
-    const faixas = items.filter(item => !item.IsDirectory);
-    const faixasAtivas = faixasPlaylist ?? faixas;
-    const faixaAtualIdx = faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
-
-    const irParaFaixa = (delta: number) => {
-        const idx = faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
-        const proxima = idx + delta;
-        if (proxima >= 0 && proxima < faixasAtivas.length) setCurrentTrack(faixasAtivas[proxima]);
+        setCurrentTrack(arquivoDePath(relativePath));
     };
 
     const handleUp = () => {
         navigateTo(path.split('/').slice(0, -1).join('/'));
     };
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                setMenuPlaylistsAberto(false);
-            }
-        };
-        if (menuPlaylistsAberto) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }, [menuPlaylistsAberto]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 text-slate-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 dark:text-white">
@@ -190,17 +75,17 @@ function MusicasInner() {
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="relative" ref={menuRef}>
                             <button
-                                onClick={() => setMenuPlaylistsAberto(!menuPlaylistsAberto)}
+                                onClick={() => setAberto(!aberto)}
                                 title="Playlists"
                                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                             >
                                 <ListMusic size={16} />
                                 <span className="hidden sm:inline">Playlists</span>
                             </button>
-                            {menuPlaylistsAberto && (
-                                <div className="absolute right-0 top-full mt-1.5 z-30 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+                            {aberto && (
+                                <div className={dropdown}>
                                     <button
-                                        onClick={() => { setMenuPlaylistsAberto(false); setDialogCriarAberto(true); }}
+                                        onClick={() => { setAberto(false); setDialogCriarAberto(true); }}
                                         className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                     >
                                         <Plus size={15} />
@@ -213,7 +98,7 @@ function MusicasInner() {
                                                 {playlists.map((p) => (
                                                     <button
                                                         key={p.Id}
-                                                        onClick={() => { setPlaylistAtiva(p); setMenuPlaylistsAberto(false); }}
+                                                        onClick={() => { setPlaylistAtiva(p); setAberto(false); }}
                                                         className={`flex items-center gap-2 w-full px-4 py-2.5 text-sm transition-colors ${playlistAtiva?.Id === p.Id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                                                     >
                                                         <ListMusic size={15} className="shrink-0" />
@@ -259,15 +144,7 @@ function MusicasInner() {
                         <PainelPlaylist
                             currentTrack={currentTrack}
                             onPlayTrack={(item) => {
-                                setFaixasPlaylist(
-                                    playlistAtiva.Tracks.map(t => ({
-                                        Name: t.RelativePath.split('/').pop() ?? '',
-                                        RelativePath: t.RelativePath,
-                                        IsDirectory: false,
-                                        Size: null,
-                                        LastModified: '',
-                                    }))
-                                );
+                                setFaixasPlaylist(playlistAtiva.Tracks.map(t => arquivoDePath(t.RelativePath)));
                                 setCurrentTrack(item);
                             }}
                         />
@@ -278,7 +155,7 @@ function MusicasInner() {
                     items={items}
                     loading={loading}
                     loadingMore={loadingMore}
-                    hasMore={page < totalPages}
+                    hasMore={hasMore}
                     totalItems={totalItems}
                     isRoot={path === ''}
                     currentTrack={currentTrack}
@@ -292,10 +169,10 @@ function MusicasInner() {
                 <PlayerMusica
                     track={currentTrack}
                     onClose={() => setCurrentTrack(null)}
-                    onPrev={() => irParaFaixa(-1)}
-                    onNext={() => irParaFaixa(1)}
-                    hasPrev={faixaAtualIdx > 0}
-                    hasNext={faixaAtualIdx >= 0 && faixaAtualIdx < faixasAtivas.length - 1}
+                    onPrev={() => irParaFaixa(faixasAtivas, -1)}
+                    onNext={() => irParaFaixa(faixasAtivas, 1)}
+                    hasPrev={idx > 0}
+                    hasNext={idx >= 0 && idx < faixasAtivas.length - 1}
                 />
             )}
 

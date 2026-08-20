@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { AudioLines, Folder, FolderUp, ListPlus, Loader2, Music2, Search } from "lucide-react";
+import { AudioLines, Folder, FolderUp, Loader2, Music2, Search } from "lucide-react";
 import type { RefObject } from "react";
 import type { FileSystemItem } from "../types";
 import { formatarData, formatarTamanho } from "../utils";
-import { AdicionarPlaylistMenu } from "./AdicionarPlaylistMenu";
-import { CriarPlaylistDialog } from "./CriarPlaylistDialog";
-import { usePlaylist } from "../../../hooks/usePlaylist";
+import { removerExensaoArquivo } from '../../../utils/text';
+import { AddToPlaylistButton } from "./AddToPlaylistButton";
+import { card } from '../styles';
 
 interface IListaMusicas {
     items: FileSystemItem[];
@@ -32,12 +31,8 @@ export function ListaMusicas({
     onSelect,
     onUp,
 }: IListaMusicas) {
-    const { criar } = usePlaylist();
-    const [menuTrackPath, setMenuTrackPath] = useState<string | null>(null);
-    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
-
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className={card}>
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
@@ -77,7 +72,7 @@ export function ListaMusicas({
                             </tr>
                         ) : items.map(item => {
                             const isPlaying = !item.IsDirectory && currentTrack?.RelativePath === item.RelativePath;
-                            const nomeExibicao = item.IsDirectory ? item.Name : item.Name.replace(/\.[^/.]+$/, '');
+                            const nomeExibicao = item.IsDirectory ? item.Name : removerExensaoArquivo(item.Name);
 
                             return (
                                 <tr
@@ -111,27 +106,8 @@ export function ListaMusicas({
                                     </td>
                                     <td className="px-2 py-3">
                                         {!item.IsDirectory && (
-                                            <div className="relative">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMenuTrackPath(menuTrackPath === item.RelativePath ? null : item.RelativePath);
-                                                    }}
-                                                    title="Adicionar à playlist"
-                                                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-slate-400 dark:text-slate-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                                                    style={{ opacity: menuTrackPath === item.RelativePath ? 1 : undefined }}
-                                                >
-                                                    <ListPlus size={15} />
-                                                </button>
-                                                <AdicionarPlaylistMenu
-                                                    relativePath={item.RelativePath}
-                                                    aberto={menuTrackPath === item.RelativePath}
-                                                    onFechar={() => setMenuTrackPath(null)}
-                                                    onCriarPlaylist={() => {
-                                                        setMenuTrackPath(null);
-                                                        setDialogCriarAberto(true);
-                                                    }}
-                                                />
+                                            <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <AddToPlaylistButton relativePath={item.RelativePath} />
                                             </div>
                                         )}
                                     </td>
@@ -159,14 +135,6 @@ export function ListaMusicas({
                     </div>
                 </div>
             )}
-
-            <CriarPlaylistDialog
-                aberto={dialogCriarAberto}
-                onFechar={() => setDialogCriarAberto(false)}
-                onCriar={async (nome) => {
-                    await criar(nome);
-                }}
-            />
         </div>
     );
 }

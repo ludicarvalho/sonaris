@@ -8,6 +8,11 @@ export function formatarTamanho(bytes: number | null): string {
   return `${valor.toFixed(indice === 0 ? 0 : 1)} ${unidades[indice]}`;
 }
 
+export function pastaDe(relativePath: string): string {
+  const idx = relativePath.lastIndexOf('/');
+  return idx > 0 ? relativePath.slice(0, idx) : 'Raiz';
+}
+
 export function formatarData(iso: string): string {
   if (!iso) return '—';
 
