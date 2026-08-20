@@ -1,3 +1,5 @@
+using System.Threading;
+
 using Microsoft.Data.Sqlite;
 using Sonaris.Services.Search;
 using Xunit;
@@ -17,7 +19,18 @@ public class DatabaseSchemaTests : IDisposable
     public void Dispose()
     {
         if (File.Exists(_dbPath))
-            File.Delete(_dbPath);
+        {
+            try
+            {
+                File.Delete(_dbPath);
+            }
+            catch (IOException)
+            {
+                // SQLite pode manter o arquivo aberto; aguardar um breve período
+                Thread.Sleep(100);
+                File.Delete(_dbPath);
+            }
+        }
     }
 
     private string ConnectionString => $"Data Source={_dbPath}";
