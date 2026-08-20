@@ -1,13 +1,12 @@
+using System.Threading;
+
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
-
 using Moq;
-
+using Sonaris.Services.Search;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
-
-using Sonaris.Services.Search;
 
 public class MusicSearchServiceTests : IDisposable
 {
@@ -29,9 +28,21 @@ public class MusicSearchServiceTests : IDisposable
     public void Dispose()
     {
         if (File.Exists(_dbPath))
-            File.Delete(_dbPath);
-
-        GC.SuppressFinalize(this);
+        {
+            // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    File.Delete(_dbPath);
+                    return;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+        }
     }
 
     private void InsertMusic(string title, string artist, string album, string filename, string relativePath)
