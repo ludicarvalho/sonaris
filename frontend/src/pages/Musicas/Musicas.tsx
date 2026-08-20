@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, ListMusic, Moon, Music4, Sun } from 'lucide-react';
+import { AlertCircle, ListMusic, Moon, Music4, Plus, Sun } from 'lucide-react';
 import { getMusicas } from './services/musicas.service';
 import type { FileSystemItem } from './types';
 import { BreadcrumbMusicas } from './components/BreadcrumbMusicas';
@@ -19,7 +19,7 @@ const PAGE_SIZE = 30;
 
 function MusicasInner() {
     const { theme, toggleTheme } = useTheme();
-    const { playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
+    const { playlists, playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
     const [searchParams, setSearchParams] = useSearchParams();
     const path = searchParams.get('path') ?? '';
     const [items, setItems] = useState<FileSystemItem[]>([]);
@@ -31,6 +31,8 @@ function MusicasInner() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
+    const [menuPlaylistsAberto, setMenuPlaylistsAberto] = useState(false);
+    const menuRef = useRef<HTMLDivElement | null>(null);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
 
     const tituloFaixa = currentTrack ? removerExensaoArquivo(currentTrack.Name) : undefined;
@@ -156,6 +158,18 @@ function MusicasInner() {
         navigateTo(path.split('/').slice(0, -1).join('/'));
     };
 
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuPlaylistsAberto(false);
+            }
+        };
+        if (menuPlaylistsAberto) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [menuPlaylistsAberto]);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 text-slate-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 dark:text-white">
             <div className={`max-w-4xl mx-auto px-4 py-8 ${currentTrack ? 'pb-44' : 'pb-12'}`}>
@@ -170,14 +184,47 @@ function MusicasInner() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => setDialogCriarAberto(true)}
-                            title="Nova playlist"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        >
-                            <ListMusic size={16} />
-                            <span className="hidden sm:inline">Playlists</span>
-                        </button>
+                        <div className="relative" ref={menuRef}>
+                            <button
+                                onClick={() => setMenuPlaylistsAberto(!menuPlaylistsAberto)}
+                                title="Playlists"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                                <ListMusic size={16} />
+                                <span className="hidden sm:inline">Playlists</span>
+                            </button>
+                            {menuPlaylistsAberto && (
+                                <div className="absolute right-0 top-full mt-1.5 z-30 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+                                    <button
+                                        onClick={() => { setMenuPlaylistsAberto(false); setDialogCriarAberto(true); }}
+                                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                    >
+                                        <Plus size={15} />
+                                        Criar playlist
+                                    </button>
+                                    {playlists.length > 0 && (
+                                        <>
+                                            <div className="border-t border-slate-100 dark:border-slate-700" />
+                                            <div className="max-h-64 overflow-y-auto py-1">
+                                                {playlists.map((p) => (
+                                                    <button
+                                                        key={p.Id}
+                                                        onClick={() => { setPlaylistAtiva(p); setMenuPlaylistsAberto(false); }}
+                                                        className={`flex items-center gap-2 w-full px-4 py-2.5 text-sm transition-colors ${playlistAtiva?.Id === p.Id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                                    >
+                                                        <ListMusic size={15} className="shrink-0" />
+                                                        <span className="truncate">{p.Name}</span>
+                                                        {p.Tracks && p.Tracks.length > 0 && (
+                                                            <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">{p.Tracks.length}</span>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                         <button
                             onClick={toggleTheme}
                             title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
