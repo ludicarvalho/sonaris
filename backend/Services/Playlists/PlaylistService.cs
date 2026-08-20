@@ -75,11 +75,21 @@ public class PlaylistService : IPlaylistService
 
     public PlaylistDto Create(string name)
     {
-        var id = Guid.NewGuid().ToString();
-        var now = DateTime.UtcNow.ToString("o");
+        var trimmed = name?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmed))
+            throw new SonarisException("Nome da playlist não pode ser vazio.");
 
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        var checkCmd = connection.CreateCommand();
+        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name";
+        checkCmd.Parameters.AddWithValue("@name", trimmed);
+        if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+            throw new SonarisException("Já existe uma playlist com esse nome.");
+
+        var id = Guid.NewGuid().ToString();
+        var now = DateTime.UtcNow.ToString("o");
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
@@ -87,7 +97,7 @@ public class PlaylistService : IPlaylistService
             VALUES (@id, @name, @createdAt, @updatedAt)
             """;
         cmd.Parameters.AddWithValue("@id", id);
-        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@name", trimmed);
         cmd.Parameters.AddWithValue("@createdAt", now);
         cmd.Parameters.AddWithValue("@updatedAt", now);
         cmd.ExecuteNonQuery();
@@ -103,8 +113,19 @@ public class PlaylistService : IPlaylistService
 
     public PlaylistDto Rename(string id, string name)
     {
+        var trimmed = name?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmed))
+            throw new SonarisException("Nome da playlist não pode ser vazio.");
+
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        var checkCmd = connection.CreateCommand();
+        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name AND id != @id";
+        checkCmd.Parameters.AddWithValue("@name", trimmed);
+        checkCmd.Parameters.AddWithValue("@id", id);
+        if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+            throw new SonarisException("Já existe uma playlist com esse nome.");
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
@@ -112,7 +133,7 @@ public class PlaylistService : IPlaylistService
             WHERE id = @id
             """;
         cmd.Parameters.AddWithValue("@id", id);
-        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@name", trimmed);
         cmd.Parameters.AddWithValue("@updatedAt", DateTime.UtcNow.ToString("o"));
         cmd.ExecuteNonQuery();
 
