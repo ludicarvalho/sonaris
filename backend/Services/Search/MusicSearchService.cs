@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using System.Text.RegularExpressions;
 
 namespace Sonaris.Services.Search;
 
@@ -56,8 +57,8 @@ public class MusicSearchService : IMusicSearchService
             WITH fts_matches AS (
                 SELECT m.id, m.title, m.artist, m.album, m.filename, m.relative_path,
                        fts.rank AS rank,
-                       snippet(music_fts, 0, '<b>', '</b>', '...', 32) AS snippet,
-                       'metadata' AS match_source
+                        snippet(music_fts, 0, '<b>', '</b>', '...', 32) AS snippet,
+                        'metadata' AS match_source
                 FROM music_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_fts MATCH @query
@@ -65,8 +66,8 @@ public class MusicSearchService : IMusicSearchService
             path_matches AS (
                 SELECT m.id, m.title, m.artist, m.album, m.filename, m.relative_path,
                        0 AS rank,
-                       '' AS snippet,
-                       'path' AS match_source
+                        '' AS snippet,
+                        'path' AS match_source
                 FROM music_path_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_path_fts MATCH @query
@@ -89,8 +90,22 @@ public class MusicSearchService : IMusicSearchService
         searchCmd.Parameters.AddWithValue("@limit", pageSize);
         searchCmd.Parameters.AddWithValue("@offset", offset);
 
+        var results = ReadSearchResults(searchCmd);
+
+        return new PagedResult<MusicSearchResult>
+        {
+            PageIndex = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)Math.Max(1, pageSize)),
+            Items = results
+        };
+    }
+
+    private static List<MusicSearchResult> ReadSearchResults(SqliteCommand command)
+    {
         var results = new List<MusicSearchResult>();
-        using (var reader = searchCmd.ExecuteReader())
+        using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
@@ -108,15 +123,7 @@ public class MusicSearchService : IMusicSearchService
                 });
             }
         }
-
-        return new PagedResult<MusicSearchResult>
-        {
-            PageIndex = pageNumber,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)Math.Max(1, pageSize)),
-            Items = results
-        };
+        return results;
     }
 
     public async Task<int> GetIndexedCountAsync()
@@ -131,25 +138,7 @@ public class MusicSearchService : IMusicSearchService
 
     private static string SanitizeFtsQuery(string input)
     {
-        var cleaned = input
-            .Replace("\"", "")
-            .Replace("'", "")
-            .Replace("(", "")
-            .Replace(")", "")
-            .Replace("{", "")
-            .Replace("}", "")
-            .Replace(":", "")
-            .Replace("^", "")
-            .Replace("!", "")
-            .Replace("*", "")
-            .Replace("+", "")
-            .Replace("-", "")
-            .Replace("~", "")
-            .Replace("<", "")
-            .Replace(">", "")
-            .Replace("&", "")
-            .Trim();
-
+        var cleaned = Regex.Replace(input, @"[""'\(\):^!*+~<>&-]", "");
         if (string.IsNullOrEmpty(cleaned))
             return string.Empty;
 
