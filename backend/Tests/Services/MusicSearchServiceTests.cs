@@ -1,10 +1,13 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+
 using Moq;
-using Sonaris.Services.Search;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Services.Search;
 
 public class MusicSearchServiceTests : IDisposable
 {
@@ -27,6 +30,8 @@ public class MusicSearchServiceTests : IDisposable
     {
         if (File.Exists(_dbPath))
             File.Delete(_dbPath);
+
+        GC.SuppressFinalize(this);
     }
 
     private void InsertMusic(string title, string artist, string album, string filename, string relativePath)

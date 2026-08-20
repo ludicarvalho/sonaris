@@ -5,7 +5,6 @@ namespace Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Domain.Infrastructure.Paging;
 using Sonaris.Domain.Infrastructure.Response;
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Music;

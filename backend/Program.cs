@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Scalar.AspNetCore;
 
 using Sonaris.Services.Arquivos;

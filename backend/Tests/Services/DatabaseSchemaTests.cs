@@ -1,5 +1,3 @@
-using System.Threading;
-
 using Microsoft.Data.Sqlite;
 using Sonaris.Services.Search;
 using Xunit;
@@ -9,6 +7,7 @@ namespace Sonaris.Backend.Tests.Services;
 public class DatabaseSchemaTests : IDisposable
 {
     private readonly string _dbPath;
+    private bool _disposed;
 
     public DatabaseSchemaTests()
     {
@@ -16,24 +15,36 @@ public class DatabaseSchemaTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(_dbPath)!);
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
-        if (File.Exists(_dbPath))
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
         {
-            // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
-            for (int i = 0; i < 10; i++)
+            if (File.Exists(_dbPath))
             {
-                try
+                // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
+                for (int i = 0; i < 10; i++)
                 {
-                    File.Delete(_dbPath);
-                    return;
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(100);
+                    try
+                    {
+                        File.Delete(_dbPath);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
             }
         }
+
+        _disposed = true;
     }
 
     private string ConnectionString => $"Data Source={_dbPath}";

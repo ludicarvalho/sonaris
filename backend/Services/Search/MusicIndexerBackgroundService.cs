@@ -2,7 +2,6 @@ using Microsoft.Data.Sqlite;
 
 namespace Sonaris.Services.Search;
 
-using Sonaris.Domain.Entities;
 using Sonaris.Services.Music;
 
 public class MusicIndexerBackgroundService : BackgroundService
