@@ -2,7 +2,7 @@ import { http } from '../../../services/http';
 import type { BasePagedResponse, BaseResponse } from '../../../types/api';
 import type { FileSystemItem, MusicMetadata } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL as string;
+const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? '';
 
 export const getMusicas = (path: string, page: number, pageSize: number) =>
   http.get<BasePagedResponse<FileSystemItem>>('/api/Musica/BuscarMusicas', {
