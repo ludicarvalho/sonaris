@@ -39,10 +39,10 @@ public class PlaylistControllerTests
         var resultado = _controller.Listar();
 
         var ok = Assert.IsType<OkObjectResult>(resultado);
-        var response = Assert.IsType<BaseResponse<List<PlaylistDto>>>(ok.Value);
+        var response = Assert.IsType<BaseResponse<IEnumerable<PlaylistDto>>>(ok.Value);
         Assert.True(response.Success);
         Assert.Equal("Playlists listadas com sucesso.", response.Message);
-        Assert.Equal(2, response.Data.Count);
+        Assert.Equal(2, response.Data.Count());
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class PlaylistControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(resultado);
         Assert.Equal(400, objectResult.StatusCode);
-        var response = Assert.IsType<BaseResponse<List<PlaylistDto>>>(objectResult.Value);
+        var response = Assert.IsType<BaseResponse<IEnumerable<PlaylistDto>>>(objectResult.Value);
         Assert.False(response.Success);
     }
 

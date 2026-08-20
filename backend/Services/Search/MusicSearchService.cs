@@ -41,7 +41,7 @@ public class MusicSearchService : IMusicSearchService
                 SELECT m.id FROM music_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_fts MATCH @query
-                UNION ALL
+                UNION
                 SELECT m.id FROM music_path_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_path_fts MATCH @query
@@ -53,8 +53,7 @@ public class MusicSearchService : IMusicSearchService
         var searchCmd = connection.CreateCommand();
         var offset = (pageNumber - 1) * pageSize;
         searchCmd.CommandText = """
-            SELECT id, title, artist, album, filename, relative_path, rank, snippet, match_source
-            FROM (
+            WITH fts_matches AS (
                 SELECT m.id, m.title, m.artist, m.album, m.filename, m.relative_path,
                        fts.rank AS rank,
                        snippet(music_fts, 0, '<b>', '</b>', '...', 32) AS snippet,
@@ -62,9 +61,8 @@ public class MusicSearchService : IMusicSearchService
                 FROM music_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_fts MATCH @query
-
-                UNION ALL
-
+            ),
+            path_matches AS (
                 SELECT m.id, m.title, m.artist, m.album, m.filename, m.relative_path,
                        0 AS rank,
                        '' AS snippet,
@@ -72,7 +70,18 @@ public class MusicSearchService : IMusicSearchService
                 FROM music_path_fts fts
                 JOIN music m ON m.id = fts.rowid
                 WHERE music_path_fts MATCH @query
+            ),
+            all_matches AS (
+                SELECT * FROM fts_matches
+                UNION ALL
+                SELECT * FROM path_matches
+            ),
+            ranked AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY rank) AS rn
+                FROM all_matches
             )
+            SELECT id, title, artist, album, filename, relative_path, rank, snippet, match_source
+            FROM ranked WHERE rn = 1
             ORDER BY rank
             LIMIT @limit OFFSET @offset
             """;
