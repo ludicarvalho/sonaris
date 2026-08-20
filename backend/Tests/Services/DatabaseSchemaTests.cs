@@ -20,15 +20,18 @@ public class DatabaseSchemaTests : IDisposable
     {
         if (File.Exists(_dbPath))
         {
-            try
+            // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
+            for (int i = 0; i < 10; i++)
             {
-                File.Delete(_dbPath);
-            }
-            catch (IOException)
-            {
-                // SQLite pode manter o arquivo aberto; aguardar um breve período
-                Thread.Sleep(100);
-                File.Delete(_dbPath);
+                try
+                {
+                    File.Delete(_dbPath);
+                    return;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(100);
+                }
             }
         }
     }
