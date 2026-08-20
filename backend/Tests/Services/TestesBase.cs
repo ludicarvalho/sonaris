@@ -1,11 +1,9 @@
-using System.Threading;
-
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Moq;
-using Sonaris.Services.Search;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Services.Search;
 
 public abstract class TestesBase : IDisposable
 {

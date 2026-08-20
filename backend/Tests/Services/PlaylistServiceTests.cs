@@ -8,27 +8,18 @@ using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-public class PlaylistServiceTests : IDisposable
+public class PlaylistServiceTests : TestesBase, IDisposable
 {
     private readonly string _dbPath;
     private readonly PlaylistService _service;
 
-    public PlaylistServiceTests()
+    public PlaylistServiceTests() : base("playlist")
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), "sonaris-playlist-tests", Guid.NewGuid().ToString("N") + ".db");
-        Directory.CreateDirectory(Path.GetDirectoryName(_dbPath)!);
-
         var config = new Mock<IConfiguration>();
         config.Setup(c => c["Settings:DatabasePath"]).Returns(_dbPath);
 
         DatabaseSchema.EnsureCreated($"Data Source={_dbPath}");
         _service = new PlaylistService(config.Object);
-    }
-
-    public void Dispose()
-    {
-        if (File.Exists(_dbPath))
-            File.Delete(_dbPath);
     }
 
     [Fact]
@@ -134,7 +125,7 @@ public class PlaylistServiceTests : IDisposable
     [Fact]
     public void AddTrack_AdicionaFaixaComPosicaoCorreta()
     {
-        var playlist = _service.Create("Com Faixas");
+        var playlist = _service.Create("Coom Faixas");
 
         var track1 = _service.AddTrack(playlist.Id, "musica1.mp3");
         var track2 = _service.AddTrack(playlist.Id, "musica2.mp3");

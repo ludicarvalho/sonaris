@@ -2,47 +2,26 @@ using System.Threading;
 
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+
 using Moq;
-using Sonaris.Services.Search;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-public class MusicSearchServiceTests : IDisposable
+using Sonaris.Services.Search;
+
+public class MusicSearchServiceTests : TestesBase, IDisposable
 {
-    private readonly string _dbPath;
     private readonly MusicSearchService _service;
 
-    public MusicSearchServiceTests()
+    public MusicSearchServiceTests() : base("search")
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), "sonaris-search-tests", Guid.NewGuid().ToString("N") + ".db");
-        Directory.CreateDirectory(Path.GetDirectoryName(_dbPath)!);
-
         var config = new Mock<IConfiguration>();
-        config.Setup(c => c["Settings:DatabasePath"]).Returns(_dbPath);
+        config.Setup(c => c["Settings:DatabasePath"]).Returns(DbPath);
 
-        DatabaseSchema.EnsureCreated($"Data Source={_dbPath}");
+        DatabaseSchema.EnsureCreated($"Data Source={DbPath}");
         _service = new MusicSearchService(config.Object);
-    }
-
-    public void Dispose()
-    {
-        if (File.Exists(_dbPath))
-        {
-            // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
-            for (int i = 0; i < 10; i++)
-            {
-                try
-                {
-                    File.Delete(_dbPath);
-                    return;
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-        }
     }
 
     private void InsertMusic(string title, string artist, string album, string filename, string relativePath)
