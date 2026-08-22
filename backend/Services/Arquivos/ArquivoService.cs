@@ -19,7 +19,7 @@ public class ArquivoService(IConfiguration configuration) : IArquivoService
 
             var currentPath = Path.GetFullPath(Path.Combine(diretorioRaiz, path ?? string.Empty));
 
-            if (!currentPath.StartsWith(diretorioRaiz, StringComparison.OrdinalIgnoreCase))
+            if (!PathGuard.IsUnderRoot(currentPath, diretorioRaiz))
                 throw new UnauthorizedAccessException();
 
             var directory = new DirectoryInfo(currentPath);
@@ -27,22 +27,17 @@ public class ArquivoService(IConfiguration configuration) : IArquivoService
             if (!directory.Exists)
                 throw new SonarisException("Arquivo/Diretório não encontrado.");
 
-            var directories = new List<FileSystemItemDto>();
-
-            if (pageNumber < 2)
-            {
-                directories = directory
-                    .EnumerateDirectories()
-                    .Select(d => new FileSystemItemDto(d.FullName)
-                    {
-                        Name = d.Name,
-                        RelativePath = Path.GetRelativePath(diretorioRaiz, d.FullName),
-                        IsDirectory = true,
-                        LastModified = d.LastWriteTimeUtc
-                    })
-                    .OrderBy(d => d.Name)
-                    .ToList();
-            }
+            var directories = directory
+                .EnumerateDirectories()
+                .Select(d => new FileSystemItemDto(d.FullName)
+                {
+                    Name = d.Name,
+                    RelativePath = Path.GetRelativePath(diretorioRaiz, d.FullName),
+                    IsDirectory = true,
+                    LastModified = d.LastWriteTimeUtc
+                })
+                .OrderBy(d => d.Name)
+                .ToList();
 
             var files = directory
                 .EnumerateFiles()

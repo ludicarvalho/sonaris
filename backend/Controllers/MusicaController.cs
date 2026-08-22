@@ -26,7 +26,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
         {
             var absolutePath = Path.GetFullPath(Path.Combine(MUSIC_PATH, fileName ?? string.Empty));
 
-            if (!absolutePath.StartsWith(MUSIC_PATH, StringComparison.OrdinalIgnoreCase))
+            if (!PathGuard.IsUnderRoot(absolutePath, MUSIC_PATH))
                 throw new SonarisException("Arquivo/Diretório não encontrado.");
 
             if (!System.IO.File.Exists(absolutePath))
@@ -97,7 +97,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
         {
             var absolutePath = Path.GetFullPath(Path.Combine(MUSIC_PATH, fileName ?? string.Empty));
 
-            if (!absolutePath.StartsWith(MUSIC_PATH, StringComparison.OrdinalIgnoreCase))
+            if (!PathGuard.IsUnderRoot(absolutePath, MUSIC_PATH))
                 throw new SonarisException("Arquivo não encontrado.");
 
             if (!System.IO.File.Exists(absolutePath))
@@ -122,7 +122,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
         {
             var absolutePath = Path.GetFullPath(Path.Combine(MUSIC_PATH, fileName ?? string.Empty));
 
-            if (!absolutePath.StartsWith(MUSIC_PATH, StringComparison.OrdinalIgnoreCase))
+            if (!PathGuard.IsUnderRoot(absolutePath, MUSIC_PATH))
                 throw new SonarisException("Arquivo não encontrado.");
 
             if (!System.IO.File.Exists(absolutePath))
@@ -152,7 +152,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
         {
             var absolutePath = Path.GetFullPath(Path.Combine(MUSIC_PATH, request.FileName ?? string.Empty));
 
-            if (!absolutePath.StartsWith(MUSIC_PATH, StringComparison.OrdinalIgnoreCase))
+            if (!PathGuard.IsUnderRoot(absolutePath, MUSIC_PATH))
                 throw new SonarisException("Arquivo não encontrado.");
 
             if (!System.IO.File.Exists(absolutePath))
