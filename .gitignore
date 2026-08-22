@@ -12,6 +12,8 @@
 [Oo]bj/
 [Dd]ebug/
 [Rr]elease/
+# artefato de build do Windows com barra invertida literal no nome (ex.: obj\Debug)
+**/*\\*/
 *.user
 *.suo
 *.userosscache
