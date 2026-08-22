@@ -76,6 +76,8 @@ public class MusicMetadataReader : IMusicMetadataReader
     /// <summary>
     /// Procura por uma imagem (.jpg, .jpeg, .png) no mesmo diretório da música
     /// e a usa como capa quando a tag ID3v2 não possui imagem embutida.
+    /// Prioriza imagens nomeadas como "folder" ou "album" (case-insensitive)
+    /// e, na falta destas, usa a primeira imagem em ordem alfabética.
     /// </summary>
     private static MusicCover RetornarCapaDoDiretorio(string absolutePath)
     {
@@ -84,10 +86,13 @@ public class MusicMetadataReader : IMusicMetadataReader
         if (string.IsNullOrEmpty(diretorio) || !Directory.Exists(diretorio))
             return null;
 
-        var imagem = Directory.EnumerateFiles(diretorio, "*.*")
+        var imagens = Directory.EnumerateFiles(diretorio, "*.*")
             .Where(arquivo => CapaImageExtensions.Contains(Path.GetExtension(arquivo), StringComparer.OrdinalIgnoreCase))
-            .OrderBy(arquivo => arquivo, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault();
+            .ToList();
+
+        var imagem = imagens.FirstOrDefault(arquivo => StemIgual(arquivo, "folder"))
+            ?? imagens.FirstOrDefault(arquivo => StemIgual(arquivo, "album"))
+            ?? imagens.OrderBy(arquivo => arquivo, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
 
         if (imagem is null)
             return null;
@@ -100,6 +105,9 @@ public class MusicMetadataReader : IMusicMetadataReader
 
         return new MusicCover(mimeType, System.IO.File.ReadAllBytes(imagem));
     }
+
+    private static bool StemIgual(string arquivo, string stem) =>
+        Path.GetFileNameWithoutExtension(arquivo).Equals(stem, StringComparison.OrdinalIgnoreCase);
 
     private static readonly string[] CapaImageExtensions = [".jpg", ".jpeg", ".png"];
 }
