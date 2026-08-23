@@ -54,7 +54,7 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
         setEditando(true);
     };
 
-    const salvar = async (e: React.FormEvent) => {
+    const salvar = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSalvando(true);
         setErro("");
@@ -110,7 +110,7 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                             </div>
                             {!editando && (
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <AddToPlaylistButton relativePath={track.RelativePath} />
+                                    <AddToPlaylistButton relativePath={track.RelativePath} className="relative shrink-0" />
                                     <button
                                         type="button"
                                         onClick={entrarEmEdicao}
