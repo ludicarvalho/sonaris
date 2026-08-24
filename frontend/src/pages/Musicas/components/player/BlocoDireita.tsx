@@ -18,7 +18,7 @@ export function BlocoDireita({ volume, mudo, onAlternarMudo, onAlterarVolume, on
                     onClick={onAlternarMudo}
                     className={btnExtra}
                 >
-                    {mudo || volume === 0 ? <VolumeX size={18} /> : volume < 0.5 ? <Volume1 size={18} /> : <Volume2 size={18} />}
+                    {mudo || volume === 0 ? <VolumeX size={20} /> : volume < 0.5 ? <Volume1 size={20} /> : <Volume2 size={20} />}
                 </button>
             </Tooltip>
             <Tooltip label="Volume" shortcut="↑ ↓" wrapperClassName="max-w-full shrink-0">
@@ -37,7 +37,7 @@ export function BlocoDireita({ volume, mudo, onAlternarMudo, onAlterarVolume, on
                     onClick={onClose}
                     className={btnExtra}
                 >
-                    <X size={18} />
+                    <X size={20} />
                 </button>
             </Tooltip>
         </div>

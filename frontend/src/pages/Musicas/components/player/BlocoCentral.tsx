@@ -28,14 +28,14 @@ export function BlocoCentral({
                     disabled={!hasPrev}
                     className={btnControle}
                 >
-                    <SkipBack size={18} />
+                    <SkipBack size={20} />
                 </button>
             </Tooltip>
 
                 <Tooltip label={tocando ? "Pausar" : "Reproduzir"} shortcut="Espaço">
                     <button
                         onClick={onAlternarPlayPause}
-                        className="flex items-center justify-center w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors shrink-0"
+                        className="flex items-center justify-center w-[50px] h-[50px] sm:w-11 sm:h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors shrink-0"
                     >
                         {tocando ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
                     </button>
@@ -47,7 +47,7 @@ export function BlocoCentral({
                     disabled={!hasNext}
                     className={btnControle}
                 >
-                    <SkipForward size={18} />
+                    <SkipForward size={20} />
                 </button>
             </Tooltip>
             </div>
