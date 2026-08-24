@@ -9,6 +9,7 @@ import { BlocoCentral } from "./player/BlocoCentral";
 import { BlocoDireita } from "./player/BlocoDireita";
 import { BlocoEsquerda } from "./player/BlocoEsquerda";
 import { DetalhesExpandidos } from "./player/DetalhesExpandidos";
+import { BarraProgresso } from "./player/BarraProgresso";
 
 interface IPlayerMusica {
     track: FileSystemItem;
@@ -159,16 +160,11 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
 
                 <BlocoCentral
                     tocando={tocando}
-                    tempoAtual={tempoAtual}
-                    tempoTotal={tempoTotal}
-                    progresso={progresso}
-                    buffer={buffer}
                     hasPrev={hasPrev}
                     hasNext={hasNext}
                     onPrev={onPrev}
                     onNext={onNext}
                     onAlternarPlayPause={alternarPlayPause}
-                    onBuscarPosicao={buscarPosicao}
                 />
 
                 <BlocoDireita
@@ -177,6 +173,16 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                     onAlternarMudo={alternarMudo}
                     onAlterarVolume={alterarVolume}
                     onClose={onClose}
+                />
+            </div>
+
+            <div className="">
+                <BarraProgresso
+                    tempoAtual={tempoAtual}
+                    tempoTotal={tempoTotal}
+                    progresso={progresso}
+                    buffer={buffer}
+                    onBuscarPosicao={buscarPosicao}
                 />
             </div>
 

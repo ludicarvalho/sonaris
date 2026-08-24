@@ -1,34 +1,23 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
-import { BarraProgresso } from "./BarraProgresso";
 import { Tooltip } from "./Tooltip";
 import { btnControle } from "./styles";
 
 interface IBlocoCentral {
     tocando: boolean;
-    tempoAtual: number;
-    tempoTotal: number;
-    progresso: number;
-    buffer: number;
     hasPrev: boolean;
     hasNext: boolean;
     onPrev: () => void;
     onNext: () => void;
     onAlternarPlayPause: () => void;
-    onBuscarPosicao: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export function BlocoCentral({
     tocando,
-    tempoAtual,
-    tempoTotal,
-    progresso,
-    buffer,
     hasPrev,
     hasNext,
     onPrev,
     onNext,
     onAlternarPlayPause,
-    onBuscarPosicao,
 }: IBlocoCentral) {
     return (
         <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
@@ -62,14 +51,6 @@ export function BlocoCentral({
                 </button>
             </Tooltip>
             </div>
-
-            <BarraProgresso
-                tempoAtual={tempoAtual}
-                tempoTotal={tempoTotal}
-                progresso={progresso}
-                buffer={buffer}
-                onBuscarPosicao={onBuscarPosicao}
-            />
         </div>
     );
 }
