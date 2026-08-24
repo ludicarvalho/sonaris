@@ -176,7 +176,7 @@ export function PlayerMusica({ track, onClose, onPrev, onNext, hasPrev, hasNext 
                 />
             </div>
 
-            <div className="">
+            <div className="px-4 pb-3 shrink-0">
                 <BarraProgresso
                     tempoAtual={tempoAtual}
                     tempoTotal={tempoTotal}

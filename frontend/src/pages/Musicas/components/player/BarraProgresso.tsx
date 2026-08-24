@@ -11,7 +11,7 @@ interface IBarraProgresso {
 
 export function BarraProgresso({ tempoAtual, tempoTotal, progresso, buffer, onBuscarPosicao }: IBarraProgresso) {
     return (
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full sm:max-w-xl sm:mx-auto">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
                 {formatarTempo(tempoAtual)}
             </span>
