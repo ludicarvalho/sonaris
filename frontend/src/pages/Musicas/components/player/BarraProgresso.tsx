@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { formatarTempo } from "../../utils";
 import { Tooltip } from "./Tooltip";
 
@@ -6,20 +7,51 @@ interface IBarraProgresso {
     tempoTotal: number;
     progresso: number;
     buffer: number;
-    onBuscarPosicao: (e: React.MouseEvent<HTMLDivElement>) => void;
+    onBuscarPosicao: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 export function BarraProgresso({ tempoAtual, tempoTotal, progresso, buffer, onBuscarPosicao }: IBarraProgresso) {
+    const arrastandoRef = useRef(false);
+    const [fracaoPreview, setFracaoPreview] = useState<number | null>(null);
+
+    const calcularFracao = (e: React.PointerEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        return Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    };
+
+    const aoPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        arrastandoRef.current = true;
+        setFracaoPreview(calcularFracao(e));
+    };
+
+    const aoPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!arrastandoRef.current) return;
+        setFracaoPreview(calcularFracao(e));
+    };
+
+    const aoPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        arrastandoRef.current = false;
+        setFracaoPreview(null);
+        onBuscarPosicao(e);
+    };
+
+    const progressoExibido = fracaoPreview !== null ? fracaoPreview * 100 : progresso;
+
     return (
         <div className="flex items-center gap-2 w-full sm:max-w-4xl sm:mx-auto">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
-                {formatarTempo(tempoAtual)}
+                {formatarTempo(fracaoPreview !== null ? fracaoPreview * tempoTotal : tempoAtual)}
             </span>
 
             <Tooltip label="Buscar posição" shortcut="← →" wrapperClassName="flex-1 min-w-0">
                 <div
-                    onClick={onBuscarPosicao}
-                    className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer"
+                    onPointerDown={aoPointerDown}
+                    onPointerMove={aoPointerMove}
+                    onPointerUp={aoPointerUp}
+                    onPointerCancel={aoPointerUp}
+                    className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer touch-none"
                 >
                     <div
                         className="absolute inset-y-0 left-0 rounded-full bg-slate-400 dark:bg-slate-500"
@@ -27,11 +59,11 @@ export function BarraProgresso({ tempoAtual, tempoTotal, progresso, buffer, onBu
                     />
                     <div
                         className="absolute inset-y-0 left-0 rounded-full bg-blue-600"
-                        style={{ width: `${progresso}%` }}
+                        style={{ width: `${progressoExibido}%` }}
                     />
                     <div
                         className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-600 border-2 border-white dark:border-slate-800 shadow"
-                        style={{ left: `calc(${progresso}% - 6px)` }}
+                        style={{ left: `calc(${progressoExibido}% - 6px)` }}
                     />
                 </div>
             </Tooltip>

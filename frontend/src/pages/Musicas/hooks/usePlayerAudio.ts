@@ -66,7 +66,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         setBuffer((audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100);
     };
 
-    const buscarPosicao = (e: React.MouseEvent<HTMLDivElement>) => {
+    const buscarPosicao = (e: React.PointerEvent<HTMLDivElement>) => {
         const audio = audioRef.current;
         if (!audio) return;
         const rect = e.currentTarget.getBoundingClientRect();
