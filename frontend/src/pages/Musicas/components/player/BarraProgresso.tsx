@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { formatarTempo } from "../../utils";
 import { Tooltip } from "./Tooltip";
 
@@ -6,10 +7,28 @@ interface IBarraProgresso {
     tempoTotal: number;
     progresso: number;
     buffer: number;
-    onBuscarPosicao: (e: React.MouseEvent<HTMLDivElement>) => void;
+    onBuscarPosicao: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 export function BarraProgresso({ tempoAtual, tempoTotal, progresso, buffer, onBuscarPosicao }: IBarraProgresso) {
+    const arrastandoRef = useRef(false);
+
+    const aoPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        arrastandoRef.current = true;
+        onBuscarPosicao(e);
+    };
+
+    const aoPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!arrastandoRef.current) return;
+        onBuscarPosicao(e);
+    };
+
+    const aoPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        arrastandoRef.current = false;
+    };
+
     return (
         <div className="flex items-center gap-2 w-full sm:max-w-4xl sm:mx-auto">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
@@ -18,8 +37,11 @@ export function BarraProgresso({ tempoAtual, tempoTotal, progresso, buffer, onBu
 
             <Tooltip label="Buscar posição" shortcut="← →" wrapperClassName="flex-1 min-w-0">
                 <div
-                    onClick={onBuscarPosicao}
-                    className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer"
+                    onPointerDown={aoPointerDown}
+                    onPointerMove={aoPointerMove}
+                    onPointerUp={aoPointerUp}
+                    onPointerCancel={aoPointerUp}
+                    className="relative flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer touch-none"
                 >
                     <div
                         className="absolute inset-y-0 left-0 rounded-full bg-slate-400 dark:bg-slate-500"
