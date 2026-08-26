@@ -5,6 +5,8 @@ using Sonaris.Domain.Infrastructure.Paging;
 
 public interface IMusicSearchService
 {
+    string ConnectionString { get; }
+
     /// <summary>
     /// Busca híbrida: FTS5 padrão (metadados) + trigram (filename/caminho).
     /// Resultados combinados e ranqueados por BM25.
