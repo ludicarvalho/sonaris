@@ -17,6 +17,9 @@ builder.Services.AddSingleton<IArquivoService, ArquivoService>();
 builder.Services.AddSingleton<IMusicMetadataReader, MusicMetadataReader>();
 builder.Services.AddSingleton<IMusicMetadataWriter, MusicMetadataWriter>();
 builder.Services.AddSingleton<IMusicSearchService, MusicSearchService>();
+builder.Services.AddSingleton<MusicRepository>();
+builder.Services.AddSingleton<MusicFileScanner>();
+builder.Services.Configure<MusicIndexerOptions>(builder.Configuration.GetSection("Settings"));
 builder.Services.AddSingleton<IPlaylistService, PlaylistService>();
 builder.Services.AddHostedService<MusicIndexerBackgroundService>();
 

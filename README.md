@@ -16,7 +16,7 @@ Sonaris/
 ├── docker-compose.yml     # Orquestra backend + frontend
 ├── .env                   # Configurações (não versionado)
 ├── backend/               # API .NET 10 (Controllers, Services, parser de metadados)
-│   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicIndexerBackgroundService
+│   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicRepository, MusicFileScanner, MusicIndexerBackgroundService
 │   ├── Services/Playlists/# PlaylistService (CRUD + reordenação)
 │   └── Tests/             # Testes unitários (xUnit + Moq) — 99 testes
 └── frontend/              # React/Vite (página de músicas, player e playlists)
