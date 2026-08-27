@@ -217,21 +217,67 @@ public class PlaylistService : IPlaylistService
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = """
+        using var transaction = connection.BeginTransaction();
+
+        var getPos = connection.CreateCommand();
+        getPos.Transaction = transaction;
+        getPos.CommandText = """
+            SELECT position FROM playlist_track
+            WHERE id = @trackId AND playlist_id = @playlistId
+            """;
+        getPos.Parameters.AddWithValue("@trackId", trackId);
+        getPos.Parameters.AddWithValue("@playlistId", playlistId);
+        var oldPosition = Convert.ToInt32(getPos.ExecuteScalar());
+
+        if (oldPosition == newPosition)
+        {
+            transaction.Rollback();
+            return;
+        }
+
+        var shake = connection.CreateCommand();
+        shake.Transaction = transaction;
+        shake.CommandText = """
+             UPDATE playlist_track SET position = position + @offset
+             WHERE playlist_id = @playlistId AND id != @trackId
+               AND position BETWEEN @minPos AND @maxPos
+             """;
+        shake.Parameters.AddWithValue("@playlistId", playlistId);
+        shake.Parameters.AddWithValue("@trackId", trackId);
+
+        if (oldPosition < newPosition)
+        {
+            shake.Parameters.AddWithValue("@offset", -1);
+            shake.Parameters.AddWithValue("@minPos", oldPosition + 1);
+            shake.Parameters.AddWithValue("@maxPos", newPosition);
+        }
+        else
+        {
+            shake.Parameters.AddWithValue("@offset", 1);
+            shake.Parameters.AddWithValue("@minPos", newPosition);
+            shake.Parameters.AddWithValue("@maxPos", oldPosition - 1);
+        }
+        shake.ExecuteNonQuery();
+
+        var updateTrack = connection.CreateCommand();
+        updateTrack.Transaction = transaction;
+        updateTrack.CommandText = """
             UPDATE playlist_track SET position = @newPosition
             WHERE id = @trackId AND playlist_id = @playlistId
             """;
-        cmd.Parameters.AddWithValue("@trackId", trackId);
-        cmd.Parameters.AddWithValue("@playlistId", playlistId);
-        cmd.Parameters.AddWithValue("@newPosition", newPosition);
-        cmd.ExecuteNonQuery();
+        updateTrack.Parameters.AddWithValue("@trackId", trackId);
+        updateTrack.Parameters.AddWithValue("@playlistId", playlistId);
+        updateTrack.Parameters.AddWithValue("@newPosition", newPosition);
+        updateTrack.ExecuteNonQuery();
 
         var updateCmd = connection.CreateCommand();
+        updateCmd.Transaction = transaction;
         updateCmd.CommandText = "UPDATE playlist SET updated_at = @updatedAt WHERE id = @id";
         updateCmd.Parameters.AddWithValue("@id", playlistId);
         updateCmd.Parameters.AddWithValue("@updatedAt", DateTime.UtcNow.ToString("o"));
         updateCmd.ExecuteNonQuery();
+
+        transaction.Commit();
     }
 
     public void Duplicate(string id, string newName)

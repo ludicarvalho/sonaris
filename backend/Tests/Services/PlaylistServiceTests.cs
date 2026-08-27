@@ -207,6 +207,54 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     }
 
     [Fact]
+    public void ReorderTrack_MoveParaPosicaoZero_DeslocaDemaisFaixas()
+    {
+        var playlist = _service.Create("ReorderZero");
+        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
+        var track3 = _service.AddTrack(playlist.Id, "c.mp3");
+
+        _service.ReorderTrack(playlist.Id, track3.Id, 0);
+
+        var result = _service.GetById(playlist.Id).Tracks;
+        Assert.Equal(track3.Id, result[0].Id);
+        Assert.Equal(track1.Id, result[1].Id);
+        Assert.Equal(track2.Id, result[2].Id);
+        Assert.Equal(new[] { 0, 1, 2 }, result.Select(t => t.Position).ToArray());
+    }
+
+    [Fact]
+    public void ReorderTrack_MoveParaUltimaPosicao_DeslocaDemaisFaixas()
+    {
+        var playlist = _service.Create("ReorderLast");
+        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
+        var track3 = _service.AddTrack(playlist.Id, "c.mp3");
+
+        _service.ReorderTrack(playlist.Id, track1.Id, 2);
+
+        var result = _service.GetById(playlist.Id).Tracks;
+        Assert.Equal(track2.Id, result[0].Id);
+        Assert.Equal(track3.Id, result[1].Id);
+        Assert.Equal(track1.Id, result[2].Id);
+        Assert.Equal(new[] { 0, 1, 2 }, result.Select(t => t.Position).ToArray());
+    }
+
+    [Fact]
+    public void ReorderTrack_MesmaPosicao_NaoAlteraNada()
+    {
+        var playlist = _service.Create("ReorderSame");
+        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
+
+        _service.ReorderTrack(playlist.Id, track1.Id, 0);
+
+        var result = _service.GetById(playlist.Id).Tracks;
+        Assert.Equal(track1.Id, result[0].Id);
+        Assert.Equal(track2.Id, result[1].Id);
+    }
+
+    [Fact]
     public void Duplicate_CriaNovaPlaylistComMesmasFaixas()
     {
         var original = _service.Create("Original");

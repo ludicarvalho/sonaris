@@ -12,9 +12,10 @@ interface IPainelPlaylist {
 }
 
 export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
-    const { playlistAtiva, setPlaylistAtiva, removerFaixa, renomear, deletar } = usePlaylist();
+    const { playlistAtiva, setPlaylistAtiva, removerFaixa, renomear, deletar, reordenarFaixa } = usePlaylist();
     const [editandoNome, setEditandoNome] = useState(false);
     const [novoNome, setNovoNome] = useState('');
+    const [arrastandoId, setArrastandoId] = useState<number | null>(null);
 
     if (!playlistAtiva) return null;
 
@@ -41,6 +42,14 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
 
     const aoPlayTrack = (relativePath: string) => {
         onPlayTrack(arquivoDePath(relativePath));
+    };
+
+    const handleDrop = async (targetId: number) => {
+        if (arrastandoId === null || arrastandoId === targetId) return;
+        const de = tracks.findIndex((t) => t.Id === arrastandoId);
+        const para = tracks.findIndex((t) => t.Id === targetId);
+        if (de === -1 || para === -1) return;
+        await reordenarFaixa(playlistAtiva.Id, arrastandoId, para);
     };
 
     return (
@@ -112,12 +121,33 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
                             return (
                                 <div
                                     key={track.Id}
-                                    className={`flex items-center gap-2 px-3 py-2 group transition-colors ${isPlaying ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+                                    draggable
+                                    onDragStart={() => setArrastandoId(track.Id)}
+                                    onDragEnd={() => setArrastandoId(null)}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.dataTransfer.dropEffect = 'move';
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        handleDrop(track.Id);
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-2 group transition-colors ${arrastandoId === track.Id ? 'opacity-50' : ''} ${isPlaying ? 'bg-blue-50 dark:bg-blue-900/20' : arrastandoId !== null ? 'cursor-grab hover:bg-slate-100 dark:hover:bg-slate-700/60' : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
                                 >
-                                <GripVertical size={14} className="shrink-0 text-slate-300 dark:text-slate-600 cursor-grab" />
+                                <span
+                                    draggable
+                                    onDragStart={(e) => {
+                                        e.stopPropagation();
+                                        setArrastandoId(track.Id);
+                                    }}
+                                    title="Arraste para reordenar"
+                                    className="shrink-0 inline-flex cursor-grab active:cursor-grabbing"
+                                >
+                                    <GripVertical size={14} className="text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500" />
+                                </span>
                                 <button
                                     onClick={() => aoPlayTrack(track.RelativePath)}
-                                    className="flex-1 min-w-0 text-left"
+                                    className="flex-1 min-w-0 text-left cursor-pointer"
                                 >
                                     <span className={`block text-sm truncate transition-colors ${isPlaying ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>
                                         {track.Title || removerExensaoArquivo(track.RelativePath.split('/').pop() ?? '')}
