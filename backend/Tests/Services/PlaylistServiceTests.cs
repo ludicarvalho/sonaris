@@ -161,6 +161,110 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     }
 
     [Fact]
+    public void AddTrack_PreencheInfosDoIndice()
+    {
+        InserirNoIndice("album/faixa.mp3", "Título Real", "Artista Real", "Álbum Real");
+
+        var playlist = _service.Create("Teste");
+
+        var track = _service.AddTrack(playlist.Id, "album/faixa.mp3");
+
+        Assert.Equal("Título Real", track.Title);
+        Assert.Equal("Artista Real", track.Artist);
+        Assert.Equal("Álbum Real", track.Album);
+    }
+
+    [Fact]
+    public void AddTrack_SemRegistroNoIndice_MantemCamposVazios()
+    {
+        var playlist = _service.Create("Teste");
+
+        var track = _service.AddTrack(playlist.Id, "album/nao-indexada.mp3");
+
+        Assert.Equal(string.Empty, track.Title);
+        Assert.Equal(string.Empty, track.Artist);
+        Assert.Equal(string.Empty, track.Album);
+    }
+
+    [Fact]
+    public void GetById_PreencheInfosDoIndiceQuandoVazio()
+    {
+        InserirNoIndice("album/faixa.mp3", "Título Real", "Artista Real", "Álbum Real");
+
+        var playlist = _service.Create("Teste");
+        using (var conn = new SqliteConnection($"Data Source={DbPath}"))
+        {
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO playlist_track (playlist_id, relative_path, title, artist, album, position, added_at)
+                VALUES (@pid, 'album/faixa.mp3', '', '', '', 0, '2026-01-01')
+                """;
+            cmd.Parameters.AddWithValue("@pid", playlist.Id);
+            cmd.ExecuteNonQuery();
+        }
+
+        var track = _service.GetById(playlist.Id).Tracks.Single();
+
+        Assert.Equal("Título Real", track.Title);
+        Assert.Equal("Artista Real", track.Artist);
+        Assert.Equal("Álbum Real", track.Album);
+    }
+
+    [Fact]
+    public void GetById_MantemInfosGravadasQuandoPresentes()
+    {
+        using (var conn = new SqliteConnection($"Data Source={DbPath}"))
+        {
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO music (title, artist, album, track, year, filename, relative_path,
+                                   file_size, last_modified, last_scanned)
+                VALUES ('Título do Índice', 'Artista Índice', 'Álbum Índice', '', '',
+                        'outra.mp3', 'outra.mp3', 0, '', '')
+                """;
+            cmd.ExecuteNonQuery();
+        }
+
+        var playlist = _service.Create("Teste");
+        var track = _service.AddTrack(playlist.Id, "outra.mp3");
+
+        using (var conn = new SqliteConnection($"Data Source={DbPath}"))
+        {
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE playlist_track SET title = 'Título Manual', artist = 'Artista Manual', album = 'Álbum Manual' WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", track.Id);
+            cmd.ExecuteNonQuery();
+        }
+
+        var reloaded = _service.GetById(playlist.Id).Tracks.Single();
+
+        Assert.Equal("Título Manual", reloaded.Title);
+        Assert.Equal("Artista Manual", reloaded.Artist);
+        Assert.Equal("Álbum Manual", reloaded.Album);
+    }
+
+    private void InserirNoIndice(string relativePath, string title, string artist, string album)
+    {
+        using var conn = new SqliteConnection($"Data Source={DbPath}");
+        conn.Open();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO music (title, artist, album, track, year, filename, relative_path,
+                               file_size, last_modified, last_scanned)
+            VALUES (@title, @artist, @album, '', '', @filename, @relativePath, 0, '', '')
+            """;
+        cmd.Parameters.AddWithValue("@title", title);
+        cmd.Parameters.AddWithValue("@artist", artist);
+        cmd.Parameters.AddWithValue("@album", album);
+        cmd.Parameters.AddWithValue("@filename", relativePath.Split('/').Last());
+        cmd.Parameters.AddWithValue("@relativePath", relativePath);
+        cmd.ExecuteNonQuery();
+    }
+
+    [Fact]
     public void RemoveTrack_RemoveFaixaDaPlaylist()
     {
         var playlist = _service.Create("Com Faixas");

@@ -152,9 +152,9 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
                                     <span className={`block text-sm truncate transition-colors ${isPlaying ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>
                                         {track.Title || removerExensaoArquivo(track.RelativePath.split('/').pop() ?? '')}
                                     </span>
-                                    {track.Artist && (
+                                    {(track.Artist || track.Album) && (
                                         <span className="block text-xs text-slate-400 dark:text-slate-500 truncate">
-                                            {track.Artist}
+                                            {[track.Artist, track.Album].filter(Boolean).join(' • ')}
                                         </span>
                                     )}
                                 </button>

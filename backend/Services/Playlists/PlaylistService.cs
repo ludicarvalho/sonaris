@@ -163,13 +163,18 @@ public class PlaylistService : IPlaylistService
 
         var now = DateTime.UtcNow.ToString("o");
 
+        var infos = BuscarInfosNoIndice(connection, relativePath);
+
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO playlist_track (playlist_id, relative_path, title, artist, album, position, added_at)
-            VALUES (@playlistId, @relativePath, '', '', '', @position, @addedAt)
+            VALUES (@playlistId, @relativePath, @title, @artist, @album, @position, @addedAt)
             """;
         cmd.Parameters.AddWithValue("@playlistId", playlistId);
         cmd.Parameters.AddWithValue("@relativePath", relativePath);
+        cmd.Parameters.AddWithValue("@title", infos.Title);
+        cmd.Parameters.AddWithValue("@artist", infos.Artist);
+        cmd.Parameters.AddWithValue("@album", infos.Album);
         cmd.Parameters.AddWithValue("@position", position);
         cmd.Parameters.AddWithValue("@addedAt", now);
                 cmd.ExecuteNonQuery();
@@ -189,6 +194,9 @@ public class PlaylistService : IPlaylistService
             Id = newTrackId,
             PlaylistId = playlistId,
             RelativePath = relativePath,
+            Title = infos.Title,
+            Artist = infos.Artist,
+            Album = infos.Album,
             Position = position,
             AddedAt = now
         };
@@ -324,14 +332,26 @@ public class PlaylistService : IPlaylistService
         {
             while (reader.Read())
             {
+                var title = reader.GetString(3);
+                var artist = reader.GetString(4);
+                var album = reader.GetString(5);
+
+                if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(artist) || string.IsNullOrWhiteSpace(album))
+                {
+                    var infos = BuscarInfosNoIndice(connection, reader.GetString(2));
+                    if (string.IsNullOrWhiteSpace(title)) title = infos.Title;
+                    if (string.IsNullOrWhiteSpace(artist)) artist = infos.Artist;
+                    if (string.IsNullOrWhiteSpace(album)) album = infos.Album;
+                }
+
                 tracks.Add(new PlaylistTrackDto
                 {
                     Id = reader.GetInt64(0),
                     PlaylistId = reader.GetString(1),
                     RelativePath = reader.GetString(2),
-                    Title = reader.GetString(3),
-                    Artist = reader.GetString(4),
-                    Album = reader.GetString(5),
+                    Title = title,
+                    Artist = artist,
+                    Album = album,
                     Position = reader.GetInt32(6),
                     AddedAt = reader.GetString(7)
                 });
@@ -339,5 +359,35 @@ public class PlaylistService : IPlaylistService
         }
 
         return tracks;
+    }
+
+    private static InfosIndiceDto BuscarInfosNoIndice(SqliteConnection connection, string relativePath)
+    {
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT title, artist, album
+            FROM music
+            WHERE relative_path = @relativePath COLLATE NOCASE
+            LIMIT 1
+            """;
+        cmd.Parameters.AddWithValue("@relativePath", relativePath);
+
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read())
+            return new InfosIndiceDto();
+
+        return new InfosIndiceDto
+        {
+            Title = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+            Artist = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+            Album = reader.IsDBNull(2) ? string.Empty : reader.GetString(2)
+        };
+    }
+
+    private sealed class InfosIndiceDto
+    {
+        public string Title { get; init; } = string.Empty;
+        public string Artist { get; init; } = string.Empty;
+        public string Album { get; init; } = string.Empty;
     }
 }
