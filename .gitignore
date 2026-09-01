@@ -72,3 +72,8 @@ ehthumbs.db
 # =========================
 ultimo*
 *.log
+
+# =========================
+# Tooling / Sessões locais
+# =========================
+.opencode/
