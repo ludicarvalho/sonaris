@@ -4,50 +4,13 @@ using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-public class DatabaseSchemaTests : IDisposable
+public class DatabaseSchemaTests : TestesBase
 {
-    private readonly string _dbPath;
-    private bool _disposed;
-
-    public DatabaseSchemaTests()
+    public DatabaseSchemaTests() : base("schema")
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), "sonaris-schema-tests", Guid.NewGuid().ToString("N") + ".db");
-        Directory.CreateDirectory(Path.GetDirectoryName(_dbPath)!);
     }
 
-    void IDisposable.Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed) return;
-        if (disposing)
-        {
-            if (File.Exists(_dbPath))
-            {
-                // Tenta deletar com varios intentos e delays para lidar com SQLite em uso
-                for (int i = 0; i < 10; i++)
-                {
-                    try
-                    {
-                        File.Delete(_dbPath);
-                        break;
-                    }
-                    catch (IOException)
-                    {
-                        Thread.Sleep(100);
-                    }
-                }
-            }
-        }
-
-        _disposed = true;
-    }
-
-    private string ConnectionString => $"Data Source={_dbPath}";
+    private string ConnectionString => $"Data Source={DbPath}";
 
     [Fact]
     public void EnsureCreated_CriaTabelas_E_Playlist()
