@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
 using Moq;
@@ -27,7 +28,25 @@ public abstract class TestesBase : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(DbPath))
-            Directory.Delete(DbPath, recursive: true);
+        var diretorio = Path.GetDirectoryName(DbPath);
+        if (diretorio == null || !Directory.Exists(diretorio)) return;
+
+        // Tenta por vários intentos e delays para lidar com o SQLite em uso (pool de conexões)
+        for (int i = 0; i < 20; i++)
+        {
+            try
+            {
+                Directory.Delete(diretorio, recursive: true);
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(50);
+            }
+            catch (SqliteException)
+            {
+                Thread.Sleep(50);
+            }
+        }
     }
 }
