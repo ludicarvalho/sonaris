@@ -4,7 +4,7 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 
 ## Stack
 
-- **Backend**: ASP.NET Core 10 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG, extração de capa, busca full-text FTS5 híbrida (unicode61 + trigram), playlists persistidas em SQLite e scan automático de músicas em background.
+- **Backend**: ASP.NET Core 10 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG, extração de capa, edição de metadados e capa (grava ID3 v2.3 com capa em encoding Latin-1 via mutagen), busca full-text FTS5 híbrida (unicode61 + trigram), playlists persistidas em SQLite e scan automático de músicas em background.
 - **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca full-text, player com capa, volume, atalhos de teclado, layout responsivo, detalhes expansíveis com edição de metadados e capa, e sistema de playlists com criação/renomeação/exclusão/reordenação de faixas.
 - **Infra**: Docker Compose (backend + nginx servindo o frontend), SQLite via bind mount.
 
@@ -16,9 +16,10 @@ Sonaris/
 ├── docker-compose.yml     # Orquestra backend + frontend
 ├── .env                   # Configurações (não versionado)
 ├── backend/               # API .NET 10 (Controllers, Services, parser de metadados)
+│   ├── Services/Music/    # MusicMetadataReader/Writer (leitura e gravação ID3 via mutagen)
 │   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicRepository, MusicFileScanner, MusicIndexerBackgroundService
 │   ├── Services/Playlists/# PlaylistService (CRUD + reordenação)
-│   └── Tests/             # Testes unitários (xUnit + Moq) — 99 testes
+│   └── Tests/             # Testes unitários (xUnit + Moq) — 122 testes
 └── frontend/              # React/Vite (página de músicas, player e playlists)
 ```
 
@@ -157,7 +158,8 @@ cd backend
 dotnet test
 ```
 
-99 testes unitários cobrindo: schema FTS5, MusicSearchService, PlaylistService, PlaylistController e MusicaController.
+122 testes unitários cobrindo: schema FTS5, MusicSearchService, MusicMetadataReader,
+MusicMetadataWriter, ArquivoService, PlaylistService, PlaylistController e MusicaController.
 
 ## Lint
 
