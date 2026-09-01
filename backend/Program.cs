@@ -20,6 +20,11 @@ builder.Services.AddOpenApi();
 var jwtSecret = builder.Configuration["Settings:JwtSecret"]
     ?? throw new InvalidOperationException("Settings:JwtSecret não configurado.");
 
+if (Encoding.UTF8.GetBytes(jwtSecret).Length < 16)
+    throw new InvalidOperationException(
+        "Settings:JwtSecret deve ter pelo menos 16 bytes (128 bits) para o algoritmo HS256. " +
+        "Gere um valor forte com, por exemplo: openssl rand -base64 48");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer((options) =>
     {

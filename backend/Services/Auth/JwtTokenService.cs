@@ -23,6 +23,9 @@ public class JwtTokenService : IJwtTokenService
     {
         _secret = configuration["Settings:JwtSecret"]
             ?? throw new InvalidOperationException("Settings:JwtSecret não configurado.");
+        if (Encoding.UTF8.GetBytes(_secret).Length < 16)
+            throw new InvalidOperationException(
+                "Settings:JwtSecret deve ter pelo menos 16 bytes (128 bits) para o algoritmo HS256.");
         _issuer = configuration["Settings:JwtIssuer"] ?? "sonaris";
         _audience = configuration["Settings:JwtAudience"] ?? "sonaris";
         _expiraEmMinutos = int.TryParse(configuration["Settings:JwtExpiraEmMinutos"], out var m) ? m : 1440;

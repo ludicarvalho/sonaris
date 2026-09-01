@@ -72,4 +72,12 @@ public class JwtTokenServiceTests
         var config = new Mock<IConfiguration>();
         Assert.Throws<InvalidOperationException>(() => new JwtTokenService(config.Object));
     }
+
+    [Fact]
+    public void Construtor_SecretCurta_LancaInvalidOperationException()
+    {
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["Settings:JwtSecret"]).Returns("curta");
+        Assert.Throws<InvalidOperationException>(() => new JwtTokenService(config.Object));
+    }
 }
