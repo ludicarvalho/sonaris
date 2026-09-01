@@ -11,6 +11,7 @@ namespace Sonaris.Backend.Tests.Services;
 public class PlaylistServiceTests : TestesBase, IDisposable
 {
     private readonly PlaylistService _service;
+    private const string UserId = "user-teste";
 
     public PlaylistServiceTests() : base("playlist")
     {
@@ -24,7 +25,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Create_RetornaPlaylistComIdEName()
     {
-        var result = _service.Create("Minha Playlist");
+        var result = _service.Create(UserId, "Minha Playlist");
 
         Assert.NotNull(result.Id);
         Assert.NotEmpty(result.Id);
@@ -37,9 +38,9 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Create_SalvaNoBanco()
     {
-        var created = _service.Create("Rock");
+        var created = _service.Create(UserId, "Rock");
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
         Assert.Single(all);
         Assert.Equal(created.Id, all[0].Id);
         Assert.Equal("Rock", all[0].Name);
@@ -48,11 +49,11 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void GetAll_RetornaPlaylistsOrdenadasPorNome()
     {
-        _service.Create("Zebra");
-        _service.Create("Alpha");
-        _service.Create("Beta");
+        _service.Create(UserId, "Zebra");
+        _service.Create(UserId, "Alpha");
+        _service.Create(UserId, "Beta");
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
 
         Assert.Equal(3, all.Count);
         Assert.Equal("Alpha", all[0].Name);
@@ -63,11 +64,11 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void GetAll_ComFaixas_RetornaFaixasNaPlaylist()
     {
-        var playlist = _service.Create("Teste");
-        _service.AddTrack(playlist.Id, "musica1.mp3");
-        _service.AddTrack(playlist.Id, "musica2.mp3");
+        var playlist = _service.Create(UserId, "Teste");
+        _service.AddTrack(UserId, playlist.Id, "musica1.mp3");
+        _service.AddTrack(UserId, playlist.Id, "musica2.mp3");
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
 
         Assert.Single(all);
         Assert.Equal(2, all[0].Tracks.Count);
@@ -76,9 +77,9 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void GetById_PlaylistExistente_RetornaPlaylist()
     {
-        var created = _service.Create("Existente");
+        var created = _service.Create(UserId, "Existente");
 
-        var found = _service.GetById(created.Id);
+        var found = _service.GetById(UserId, created.Id);
 
         Assert.NotNull(found);
         Assert.Equal(created.Id, found.Id);
@@ -88,7 +89,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void GetById_PlaylistInexistente_RetornaNull()
     {
-        var found = _service.GetById("nao-existe");
+        var found = _service.GetById(UserId, "nao-existe");
 
         Assert.Null(found);
     }
@@ -96,39 +97,39 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Rename_AlteraNomeDaPlaylist()
     {
-        var playlist = _service.Create("Original");
+        var playlist = _service.Create(UserId, "Original");
 
-        _service.Rename(playlist.Id, "Renomeada");
+        _service.Rename(UserId, playlist.Id, "Renomeada");
 
-        var found = _service.GetById(playlist.Id);
+        var found = _service.GetById(UserId, playlist.Id);
         Assert.Equal("Renomeada", found.Name);
     }
 
     [Fact]
     public void Delete_RemovePlaylist()
     {
-        var playlist = _service.Create("Para Deletar");
+        var playlist = _service.Create(UserId, "Para Deletar");
 
-        _service.Delete(playlist.Id);
+        _service.Delete(UserId, playlist.Id);
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
         Assert.Empty(all);
     }
 
     [Fact]
     public void Delete_PlaylistInexistente_NaoLancaErro()
     {
-        _service.Delete("nao-existe");
+        _service.Delete(UserId, "nao-existe");
     }
 
     [Fact]
     public void AddTrack_AdicionaFaixaComPosicaoCorreta()
     {
-        var playlist = _service.Create("Coom Faixas");
+        var playlist = _service.Create(UserId, "Coom Faixas");
 
-        var track1 = _service.AddTrack(playlist.Id, "musica1.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "musica2.mp3");
-        var track3 = _service.AddTrack(playlist.Id, "musica3.mp3");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "musica1.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "musica2.mp3");
+        var track3 = _service.AddTrack(UserId, playlist.Id, "musica3.mp3");
 
         Assert.Equal(0, track1.Position);
         Assert.Equal(1, track2.Position);
@@ -138,9 +139,9 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void AddTrack_RetornaFaixaComId()
     {
-        var playlist = _service.Create("Teste");
+        var playlist = _service.Create(UserId, "Teste");
 
-        var track = _service.AddTrack(playlist.Id, "musica.mp3");
+        var track = _service.AddTrack(UserId, playlist.Id, "musica.mp3");
 
         Assert.True(track.Id > 0);
         Assert.Equal(playlist.Id, track.PlaylistId);
@@ -150,13 +151,13 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void AddTrack_AtualizaUpdatedAtDaPlaylist()
     {
-        var playlist = _service.Create("Teste");
+        var playlist = _service.Create(UserId, "Teste");
         var before = playlist.UpdatedAt;
 
         Thread.Sleep(10);
-        _service.AddTrack(playlist.Id, "musica.mp3");
+        _service.AddTrack(UserId, playlist.Id, "musica.mp3");
 
-        var after = _service.GetById(playlist.Id);
+        var after = _service.GetById(UserId, playlist.Id);
         Assert.True(DateTime.Parse(after.UpdatedAt) >= DateTime.Parse(before));
     }
 
@@ -165,9 +166,9 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     {
         InserirNoIndice("album/faixa.mp3", "Título Real", "Artista Real", "Álbum Real");
 
-        var playlist = _service.Create("Teste");
+        var playlist = _service.Create(UserId, "Teste");
 
-        var track = _service.AddTrack(playlist.Id, "album/faixa.mp3");
+        var track = _service.AddTrack(UserId, playlist.Id, "album/faixa.mp3");
 
         Assert.Equal("Título Real", track.Title);
         Assert.Equal("Artista Real", track.Artist);
@@ -177,9 +178,9 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void AddTrack_SemRegistroNoIndice_MantemCamposVazios()
     {
-        var playlist = _service.Create("Teste");
+        var playlist = _service.Create(UserId, "Teste");
 
-        var track = _service.AddTrack(playlist.Id, "album/nao-indexada.mp3");
+        var track = _service.AddTrack(UserId, playlist.Id, "album/nao-indexada.mp3");
 
         Assert.Equal(string.Empty, track.Title);
         Assert.Equal(string.Empty, track.Artist);
@@ -191,7 +192,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     {
         InserirNoIndice("album/faixa.mp3", "Título Real", "Artista Real", "Álbum Real");
 
-        var playlist = _service.Create("Teste");
+        var playlist = _service.Create(UserId, "Teste");
         using (var conn = new SqliteConnection($"Data Source={DbPath}"))
         {
             conn.Open();
@@ -204,7 +205,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
             cmd.ExecuteNonQuery();
         }
 
-        var track = _service.GetById(playlist.Id).Tracks.Single();
+        var track = _service.GetById(UserId, playlist.Id).Tracks.Single();
 
         Assert.Equal("Título Real", track.Title);
         Assert.Equal("Artista Real", track.Artist);
@@ -227,8 +228,8 @@ public class PlaylistServiceTests : TestesBase, IDisposable
             cmd.ExecuteNonQuery();
         }
 
-        var playlist = _service.Create("Teste");
-        var track = _service.AddTrack(playlist.Id, "outra.mp3");
+        var playlist = _service.Create(UserId, "Teste");
+        var track = _service.AddTrack(UserId, playlist.Id, "outra.mp3");
 
         using (var conn = new SqliteConnection($"Data Source={DbPath}"))
         {
@@ -239,7 +240,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
             cmd.ExecuteNonQuery();
         }
 
-        var reloaded = _service.GetById(playlist.Id).Tracks.Single();
+        var reloaded = _service.GetById(UserId, playlist.Id).Tracks.Single();
 
         Assert.Equal("Título Manual", reloaded.Title);
         Assert.Equal("Artista Manual", reloaded.Artist);
@@ -267,13 +268,13 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void RemoveTrack_RemoveFaixaDaPlaylist()
     {
-        var playlist = _service.Create("Com Faixas");
-        var track1 = _service.AddTrack(playlist.Id, "musica1.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "musica2.mp3");
+        var playlist = _service.Create(UserId, "Com Faixas");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "musica1.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "musica2.mp3");
 
-        _service.RemoveTrack(playlist.Id, track1.Id);
+        _service.RemoveTrack(UserId, playlist.Id, track1.Id);
 
-        var found = _service.GetById(playlist.Id);
+        var found = _service.GetById(UserId, playlist.Id);
         Assert.Single(found.Tracks);
         Assert.Equal("musica2.mp3", found.Tracks[0].RelativePath);
     }
@@ -281,25 +282,25 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void RemoveTrack_FaixaDeOutraPlaylist_NaoRemove()
     {
-        var playlist1 = _service.Create("Playlist 1");
-        var playlist2 = _service.Create("Playlist 2");
-        var track1 = _service.AddTrack(playlist1.Id, "musica1.mp3");
-        _service.AddTrack(playlist2.Id, "musica2.mp3");
+        var playlist1 = _service.Create(UserId, "Playlist 1");
+        var playlist2 = _service.Create(UserId, "Playlist 2");
+        var track1 = _service.AddTrack(UserId, playlist1.Id, "musica1.mp3");
+        _service.AddTrack(UserId, playlist2.Id, "musica2.mp3");
 
-        _service.RemoveTrack(playlist2.Id, track1.Id);
+        _service.RemoveTrack(UserId, playlist2.Id, track1.Id);
 
-        var found1 = _service.GetById(playlist1.Id);
+        var found1 = _service.GetById(UserId, playlist1.Id);
         Assert.Single(found1.Tracks);
     }
 
     [Fact]
     public void ReorderTrack_AlteraPosicaoDaFaixa()
     {
-        var playlist = _service.Create("Reorder");
-        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
+        var playlist = _service.Create(UserId, "Reorder");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "b.mp3");
 
-        _service.ReorderTrack(playlist.Id, track2.Id, 99);
+        _service.ReorderTrack(UserId, playlist.Id, track2.Id, 99);
 
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
@@ -313,14 +314,14 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void ReorderTrack_MoveParaPosicaoZero_DeslocaDemaisFaixas()
     {
-        var playlist = _service.Create("ReorderZero");
-        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
-        var track3 = _service.AddTrack(playlist.Id, "c.mp3");
+        var playlist = _service.Create(UserId, "ReorderZero");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "b.mp3");
+        var track3 = _service.AddTrack(UserId, playlist.Id, "c.mp3");
 
-        _service.ReorderTrack(playlist.Id, track3.Id, 0);
+        _service.ReorderTrack(UserId, playlist.Id, track3.Id, 0);
 
-        var result = _service.GetById(playlist.Id).Tracks;
+        var result = _service.GetById(UserId, playlist.Id).Tracks;
         Assert.Equal(track3.Id, result[0].Id);
         Assert.Equal(track1.Id, result[1].Id);
         Assert.Equal(track2.Id, result[2].Id);
@@ -330,14 +331,14 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void ReorderTrack_MoveParaUltimaPosicao_DeslocaDemaisFaixas()
     {
-        var playlist = _service.Create("ReorderLast");
-        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
-        var track3 = _service.AddTrack(playlist.Id, "c.mp3");
+        var playlist = _service.Create(UserId, "ReorderLast");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "b.mp3");
+        var track3 = _service.AddTrack(UserId, playlist.Id, "c.mp3");
 
-        _service.ReorderTrack(playlist.Id, track1.Id, 2);
+        _service.ReorderTrack(UserId, playlist.Id, track1.Id, 2);
 
-        var result = _service.GetById(playlist.Id).Tracks;
+        var result = _service.GetById(UserId, playlist.Id).Tracks;
         Assert.Equal(track2.Id, result[0].Id);
         Assert.Equal(track3.Id, result[1].Id);
         Assert.Equal(track1.Id, result[2].Id);
@@ -347,13 +348,13 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void ReorderTrack_MesmaPosicao_NaoAlteraNada()
     {
-        var playlist = _service.Create("ReorderSame");
-        var track1 = _service.AddTrack(playlist.Id, "a.mp3");
-        var track2 = _service.AddTrack(playlist.Id, "b.mp3");
+        var playlist = _service.Create(UserId, "ReorderSame");
+        var track1 = _service.AddTrack(UserId, playlist.Id, "a.mp3");
+        var track2 = _service.AddTrack(UserId, playlist.Id, "b.mp3");
 
-        _service.ReorderTrack(playlist.Id, track1.Id, 0);
+        _service.ReorderTrack(UserId, playlist.Id, track1.Id, 0);
 
-        var result = _service.GetById(playlist.Id).Tracks;
+        var result = _service.GetById(UserId, playlist.Id).Tracks;
         Assert.Equal(track1.Id, result[0].Id);
         Assert.Equal(track2.Id, result[1].Id);
     }
@@ -361,13 +362,13 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Duplicate_CriaNovaPlaylistComMesmasFaixas()
     {
-        var original = _service.Create("Original");
-        _service.AddTrack(original.Id, "musica1.mp3");
-        _service.AddTrack(original.Id, "musica2.mp3");
+        var original = _service.Create(UserId, "Original");
+        _service.AddTrack(UserId, original.Id, "musica1.mp3");
+        _service.AddTrack(UserId, original.Id, "musica2.mp3");
 
-        _service.Duplicate(original.Id, "Cópia");
+        _service.Duplicate(UserId, original.Id, "Cópia");
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
         Assert.Equal(2, all.Count);
 
         var copia = all.First(p => p.Name == "Cópia");
@@ -380,16 +381,16 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Duplicate_PlaylistInexistente_LancaSonarisException()
     {
-        Assert.Throws<SonarisException>(() => _service.Duplicate("nao-existe", "Cópia"));
+        Assert.Throws<SonarisException>(() => _service.Duplicate(UserId, "nao-existe", "Cópia"));
     }
 
     [Fact]
     public void GetAll_PlaylistsSemFaixas_RetornaListaVaziaDeFaixas()
     {
-        _service.Create("Vazia");
-        _service.Create("Também Vazia");
+        _service.Create(UserId, "Vazia");
+        _service.Create(UserId, "Também Vazia");
 
-        var all = _service.GetAll();
+        var all = _service.GetAll(UserId);
 
         Assert.Equal(2, all.Count);
         Assert.All(all, p => Assert.Empty(p.Tracks));
@@ -398,8 +399,8 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     [Fact]
     public void Create_MultiplosCreates_GeraIdsDiferentes()
     {
-        var p1 = _service.Create("Playlist 1");
-        var p2 = _service.Create("Playlist 2");
+        var p1 = _service.Create(UserId, "Playlist 1");
+        var p2 = _service.Create(UserId, "Playlist 2");
 
         Assert.NotEqual(p1.Id, p2.Id);
     }

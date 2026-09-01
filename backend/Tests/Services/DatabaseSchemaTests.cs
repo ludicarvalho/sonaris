@@ -69,6 +69,65 @@ public class DatabaseSchemaTests : IDisposable
         Assert.Contains("music", tables);
         Assert.Contains("playlist", tables);
         Assert.Contains("playlist_track", tables);
+        Assert.Contains("usuario", tables);
+    }
+
+    [Fact]
+    public void EnsureCreated_CriaTabelaUsuario_ComColunas()
+    {
+        DatabaseSchema.EnsureCreated(ConnectionString);
+
+        using var connection = new SqliteConnection(ConnectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT name FROM pragma_table_info('usuario')";
+        var colunas = new List<string>();
+        using (var reader = cmd.ExecuteReader())
+        {
+            while (reader.Read())
+                colunas.Add(reader.GetString(0));
+        }
+
+        Assert.Contains("id", colunas);
+        Assert.Contains("username", colunas);
+        Assert.Contains("senha_hash", colunas);
+        Assert.Contains("senha_salt", colunas);
+        Assert.Contains("is_admin", colunas);
+    }
+
+    [Fact]
+    public void EnsureCreated_PlaylistTemColunaUserId()
+    {
+        DatabaseSchema.EnsureCreated(ConnectionString);
+
+        using var connection = new SqliteConnection(ConnectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('playlist') WHERE name = 'user_id'";
+        Assert.Equal(1, Convert.ToInt32(cmd.ExecuteScalar()));
+    }
+
+    [Fact]
+    public void EnsureCreated_MigraBancoExistenteSemUserId_AdicionaColuna()
+    {
+        // Simula um banco criado antes da coluna user_id
+        using (var connection = new SqliteConnection(ConnectionString))
+        {
+            connection.Open();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "CREATE TABLE playlist (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)";
+            cmd.ExecuteNonQuery();
+        }
+
+        DatabaseSchema.EnsureCreated(ConnectionString);
+
+        using var conn2 = new SqliteConnection(ConnectionString);
+        conn2.Open();
+        var check = conn2.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('playlist') WHERE name = 'user_id'";
+        Assert.Equal(1, Convert.ToInt32(check.ExecuteScalar()));
     }
 
     [Fact]

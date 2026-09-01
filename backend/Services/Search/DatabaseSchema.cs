@@ -28,6 +28,17 @@ public static class DatabaseSchema
                 last_scanned    TEXT NOT NULL DEFAULT ''
             );
 
+            -- Tabela de usuários
+            CREATE TABLE IF NOT EXISTS usuario (
+                id            TEXT PRIMARY KEY,
+                username      TEXT NOT NULL UNIQUE,
+                senha_hash    TEXT NOT NULL,
+                senha_salt    TEXT NOT NULL,
+                nome_exibicao TEXT NOT NULL DEFAULT '',
+                is_admin      INTEGER NOT NULL DEFAULT 0,
+                created_at    TEXT NOT NULL DEFAULT ''
+            );
+
             -- Índice FTS5 padrão (unicode61) — busca por palavras em metadados
             CREATE VIRTUAL TABLE IF NOT EXISTS music_fts USING fts5(
                 title, artist, album,
@@ -71,6 +82,7 @@ public static class DatabaseSchema
             CREATE TABLE IF NOT EXISTS playlist (
                 id          TEXT PRIMARY KEY,
                 name        TEXT NOT NULL,
+                user_id     TEXT,
                 created_at  TEXT NOT NULL,
                 updated_at  TEXT NOT NULL
             );
@@ -92,5 +104,30 @@ public static class DatabaseSchema
             """;
 
         command.ExecuteNonQuery();
+
+        EnsurePlaylistOwnerColumn(connection);
+    }
+
+    /// <summary>
+    /// Garante a coluna user_id em bancos existentes (SQLite não suporta
+    /// ADD COLUMN IF NOT EXISTS) e o índice correspondente. Migração idempotente.
+    /// </summary>
+    private static void EnsurePlaylistOwnerColumn(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = """
+            SELECT COUNT(*) FROM pragma_table_info('playlist') WHERE name = 'user_id'
+            """;
+
+        if (Convert.ToInt32(check.ExecuteScalar()) == 0)
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE playlist ADD COLUMN user_id TEXT";
+            alter.ExecuteNonQuery();
+        }
+
+        using var index = connection.CreateCommand();
+        index.CommandText = "CREATE INDEX IF NOT EXISTS idx_playlist_user_id ON playlist(user_id)";
+        index.ExecuteNonQuery();
     }
 }

@@ -18,13 +18,18 @@ public class PlaylistService : IPlaylistService
         DatabaseSchema.EnsureCreated(_connectionString);
     }
 
-    public List<PlaylistDto> GetAll()
+    public List<PlaylistDto> GetAll(string userId)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name, created_at, updated_at FROM playlist ORDER BY name";
+        cmd.CommandText = """
+            SELECT id, name, created_at, updated_at FROM playlist
+            WHERE user_id = @userId
+            ORDER BY name
+            """;
+        cmd.Parameters.AddWithValue("@userId", userId);
 
         var playlists = new List<PlaylistDto>();
         using (var reader = cmd.ExecuteReader())
@@ -49,14 +54,18 @@ public class PlaylistService : IPlaylistService
         return playlists;
     }
 
-    public PlaylistDto GetById(string id)
+    public PlaylistDto GetById(string userId, string id)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name, created_at, updated_at FROM playlist WHERE id = @id";
+        cmd.CommandText = """
+            SELECT id, name, created_at, updated_at FROM playlist
+            WHERE id = @id AND user_id = @userId
+            """;
         cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@userId", userId);
 
         using var reader = cmd.ExecuteReader();
         if (!reader.Read()) return null;
@@ -73,7 +82,7 @@ public class PlaylistService : IPlaylistService
         return playlist;
     }
 
-    public PlaylistDto Create(string name)
+    public PlaylistDto Create(string userId, string name)
     {
         var trimmed = name?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(trimmed))
@@ -83,8 +92,9 @@ public class PlaylistService : IPlaylistService
         connection.Open();
 
         var checkCmd = connection.CreateCommand();
-        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name";
+        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name AND user_id = @userId";
         checkCmd.Parameters.AddWithValue("@name", trimmed);
+        checkCmd.Parameters.AddWithValue("@userId", userId);
         if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
             throw new SonarisException("Já existe uma playlist com esse nome.");
 
@@ -93,11 +103,12 @@ public class PlaylistService : IPlaylistService
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO playlist (id, name, created_at, updated_at)
-            VALUES (@id, @name, @createdAt, @updatedAt)
+            INSERT INTO playlist (id, name, user_id, created_at, updated_at)
+            VALUES (@id, @name, @userId, @createdAt, @updatedAt)
             """;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@name", trimmed);
+        cmd.Parameters.AddWithValue("@userId", userId);
         cmd.Parameters.AddWithValue("@createdAt", now);
         cmd.Parameters.AddWithValue("@updatedAt", now);
         cmd.ExecuteNonQuery();
@@ -111,7 +122,7 @@ public class PlaylistService : IPlaylistService
         };
     }
 
-    public PlaylistDto Rename(string id, string name)
+    public PlaylistDto Rename(string userId, string id, string name)
     {
         var trimmed = name?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(trimmed))
@@ -121,40 +132,46 @@ public class PlaylistService : IPlaylistService
         connection.Open();
 
         var checkCmd = connection.CreateCommand();
-        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name AND id != @id";
+        checkCmd.CommandText = "SELECT COUNT(*) FROM playlist WHERE name = @name AND id != @id AND user_id = @userId";
         checkCmd.Parameters.AddWithValue("@name", trimmed);
         checkCmd.Parameters.AddWithValue("@id", id);
+        checkCmd.Parameters.AddWithValue("@userId", userId);
         if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
             throw new SonarisException("Já existe uma playlist com esse nome.");
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
             UPDATE playlist SET name = @name, updated_at = @updatedAt
-            WHERE id = @id
+            WHERE id = @id AND user_id = @userId
             """;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@name", trimmed);
+        cmd.Parameters.AddWithValue("@userId", userId);
         cmd.Parameters.AddWithValue("@updatedAt", DateTime.UtcNow.ToString("o"));
         cmd.ExecuteNonQuery();
 
-        return GetById(id)!;
+        return GetById(userId, id)!;
     }
 
-    public void Delete(string id)
+    public void Delete(string userId, string id)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "DELETE FROM playlist WHERE id = @id";
+        cmd.CommandText = "DELETE FROM playlist WHERE id = @id AND user_id = @userId";
         cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@userId", userId);
         cmd.ExecuteNonQuery();
     }
 
-    public PlaylistTrackDto AddTrack(string playlistId, string relativePath)
+    public PlaylistTrackDto AddTrack(string userId, string playlistId, string relativePath)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        if (GetById(userId, playlistId) == null)
+            throw new SonarisException("Playlist não encontrada.");
 
         var maxPosCmd = connection.CreateCommand();
         maxPosCmd.CommandText = "SELECT COALESCE(MAX(position), -1) + 1 FROM playlist_track WHERE playlist_id = @playlistId";
@@ -202,10 +219,13 @@ public class PlaylistService : IPlaylistService
         };
     }
 
-    public void RemoveTrack(string playlistId, long trackId)
+    public void RemoveTrack(string userId, string playlistId, long trackId)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        if (GetById(userId, playlistId) == null)
+            throw new SonarisException("Playlist não encontrada.");
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM playlist_track WHERE id = @trackId AND playlist_id = @playlistId";
@@ -220,10 +240,13 @@ public class PlaylistService : IPlaylistService
         updateCmd.ExecuteNonQuery();
     }
 
-    public void ReorderTrack(string playlistId, long trackId, int newPosition)
+    public void ReorderTrack(string userId, string playlistId, long trackId, int newPosition)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        if (GetById(userId, playlistId) == null)
+            throw new SonarisException("Playlist não encontrada.");
 
         using var transaction = connection.BeginTransaction();
 
@@ -288,12 +311,12 @@ public class PlaylistService : IPlaylistService
         transaction.Commit();
     }
 
-    public void Duplicate(string id, string newName)
+    public void Duplicate(string userId, string id, string newName)
     {
-        var original = GetById(id);
+        var original = GetById(userId, id);
         if (original == null) throw new SonarisException("Playlist não encontrada.");
 
-        var newPlaylist = Create(newName);
+        var newPlaylist = Create(userId, newName);
 
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();

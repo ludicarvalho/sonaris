@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sonaris.Controllers;
@@ -8,6 +9,7 @@ using Sonaris.Domain.Infrastructure.Response;
 using Sonaris.Services.Playlists;
 
 [Route("api/Playlist")]
+[Authorize]
 public class PlaylistController(IPlaylistService playlistService) : BaseController
 {
     private readonly IPlaylistService playlistService = playlistService ?? throw new ArgumentNullException(nameof(playlistService));
@@ -19,7 +21,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         try
         {
-            response.Data = playlistService.GetAll();
+            response.Data = playlistService.GetAll(ObterUsuarioIdAtual());
             response.Success = true;
             response.Message = "Playlists listadas com sucesso.";
         }
@@ -38,7 +40,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         try
         {
-            response.Data = playlistService.GetById(id)
+            response.Data = playlistService.GetById(ObterUsuarioIdAtual(), id)
                 ?? throw new SonarisException("Playlist não encontrada.");
             response.Success = true;
             response.Message = "Playlist encontrada com sucesso.";
@@ -61,7 +63,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
             if (string.IsNullOrWhiteSpace(name))
                 throw new SonarisException("Nome da playlist é obrigatório.");
 
-            response.Data = playlistService.Create(name);
+            response.Data = playlistService.Create(ObterUsuarioIdAtual(), name);
             response.Success = true;
             response.Message = "Playlist criada com sucesso.";
         }
@@ -83,7 +85,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
             if (string.IsNullOrWhiteSpace(name))
                 throw new SonarisException("Nome da playlist é obrigatório.");
 
-            response.Data = playlistService.Rename(id, name);
+            response.Data = playlistService.Rename(ObterUsuarioIdAtual(), id, name);
             response.Success = true;
             response.Message = "Playlist renomeada com sucesso.";
         }
@@ -102,7 +104,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         try
         {
-            playlistService.Delete(id);
+            playlistService.Delete(ObterUsuarioIdAtual(), id);
             response.Success = true;
             response.Message = "Playlist deletada com sucesso.";
         }
@@ -124,7 +126,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new SonarisException("Caminho da música é obrigatório.");
 
-            response.Data = playlistService.AddTrack(id, relativePath);
+            response.Data = playlistService.AddTrack(ObterUsuarioIdAtual(), id, relativePath);
             response.Success = true;
             response.Message = "Faixa adicionada à playlist com sucesso.";
         }
@@ -143,7 +145,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         try
         {
-            playlistService.RemoveTrack(id, trackId);
+            playlistService.RemoveTrack(ObterUsuarioIdAtual(), id, trackId);
             response.Success = true;
             response.Message = "Faixa removida da playlist com sucesso.";
         }
@@ -162,7 +164,7 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         try
         {
-            playlistService.ReorderTrack(id, trackId, newPosition);
+            playlistService.ReorderTrack(ObterUsuarioIdAtual(), id, trackId, newPosition);
             response.Success = true;
             response.Message = "Faixa reordenada com sucesso.";
         }
@@ -184,8 +186,8 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
             if (string.IsNullOrWhiteSpace(newName))
                 throw new SonarisException("Nome da nova playlist é obrigatório.");
 
-            playlistService.Duplicate(id, newName);
-            response.Data = playlistService.GetAll().LastOrDefault(p => p.Name == newName);
+            playlistService.Duplicate(ObterUsuarioIdAtual(), id, newName);
+            response.Data = playlistService.GetAll(ObterUsuarioIdAtual()).LastOrDefault(p => p.Name == newName);
             response.Success = true;
             response.Message = "Playlist duplicada com sucesso.";
         }
@@ -196,4 +198,9 @@ public class PlaylistController(IPlaylistService playlistService) : BaseControll
 
         return Result(response);
     }
+
+    private string ObterUsuarioIdAtual()
+        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+           ?? User.FindFirst("sub")?.Value
+           ?? throw new SonarisException("Usuário não identificado.");
 }
