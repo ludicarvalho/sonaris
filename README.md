@@ -1,6 +1,6 @@
 # Sonaris
 
-Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por uma API (sem autenticação) e um frontend com player, rodando via Docker Compose.
+Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por uma API com autenticação JWT e um frontend com player, rodando via Docker Compose.
 
 ## Stack
 
@@ -19,7 +19,7 @@ Sonaris/
 │   ├── Services/Music/    # MusicMetadataReader/Writer (leitura e gravação ID3 via mutagen)
 │   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicRepository, MusicFileScanner, MusicIndexerBackgroundService
 │   ├── Services/Playlists/# PlaylistService (CRUD + reordenação)
-│   └── Tests/             # Testes unitários (xUnit + Moq) — 122 testes
+│   └── Tests/             # Testes unitários (xUnit + Moq) — 146 testes
 └── frontend/              # React/Vite (página de músicas, player e playlists)
 ```
 
@@ -64,12 +64,19 @@ cp .env.example .env
 | `BACKEND_PORT`     | `5033`              | Porta do host para a API |
 | `FRONTEND_PORT`    | `3003`              | Porta do host para o frontend |
 | `SONARIS_DATA_DIR` | `~/sonaris/database` | Diretório no host para persistir o banco SQLite |
+| `JWT_SECRET`       | *(obrigatório)*      | Segredo usado para assinar os tokens JWT (longo e aleatório) |
+| `JWT_ISSUER`       | `sonaris`            | Emissor (iss) do token |
+| `JWT_AUDIENCE`     | `sonaris`            | Audiência (aud) do token |
+| `JWT_EXPIRA_EM_MINUTOS` | `1440`          | Validade do token em minutos |
+| `ADMIN_USERNAME`   | `admin`              | Usuário administrador criado na primeira execução |
+| `ADMIN_PASSWORD`   | `admin`              | Senha do administrador criado na primeira execução |
+| `ADMIN_NOME`       | `Administrador`      | Nome de exibição do administrador |
 
 A pasta de músicas é montada no container em `/Musicas` e pode ser **escrita** para permitir a edição de metadados pelo próprio Sonaris.
 
 O banco SQLite é persistido em `~/sonaris/database/sonaris.db` via bind mount — os dados sobrevivem a `docker compose down` e `up`.
 
-> O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`.
+> O arquivo `.env` não é versionado. Alterações em `MUSIC_PATH`/portas exigem `docker compose up -d`; alterações em `VITE_API_URL` exigem rebuild: `docker compose up -d --build sonaris-frontend`. O `docker compose up` falha se `JWT_SECRET` não estiver definido (segurança).
 
 ## API
 
@@ -92,6 +99,23 @@ Resultados duplicados de ambas as tabelas são deduplicados via CTEs com `ROW_NU
 
 O indexer roda automaticamente no startup e a cada 5 minutos, indexando todas as músicas encontradas no diretório configurado.
 
+### Autenticação (prefixo `/api/Auth`)
+
+Todos os endpoints de música e playlist exigem um token JWT. Para obtê-lo, faça login:
+
+| Ação         | Método | Endpoint                        |
+| ------------ | ------ | ------------------------------- |
+| Login        | POST   | `/api/Auth/Login` (body: `{ username, senha }`) → `{ token, user }` |
+| Usuário atual | GET   | `/api/Auth/Me`                  |
+| Listar usuários | GET | `/api/Auth/Usuarios` *(Admin)* |
+| Registrar usuário | POST | `/api/Auth/Registrar` *(Admin)* |
+| Alterar papel | PUT   | `/api/Auth/{id}/papel?isAdmin=<bool>` *(Admin)* |
+| Alterar senha | PUT   | `/api/Auth/senha`               |
+
+Envie o token no header `Authorization: Bearer <token>`. Endpoints que editam metadados (`EditarMetadados`) e os endpoints de Auth marcados como *(Admin)* exigem a role `Admin`. O streaming de áudio e capa recebem o token via query string (`?token=`), pois `<audio>`/`<img>` não conseguem enviar headers.
+
+Na primeira execução, uma conta de administrador é criada automaticamente a partir das variáveis `ADMIN_USERNAME`/`ADMIN_PASSWORD`/`ADMIN_NOME`.
+
 ### Playlists (prefixo `/api/Playlist`)
 
 | Ação             | Método | Endpoint                                      |
@@ -106,7 +130,7 @@ O indexer roda automaticamente no startup e a cada 5 minutos, indexando todas as
 | Reordenar faixa  | PUT    | `/api/Playlist/{id}/tracks/{trackId}/reorder` |
 | Duplicar         | POST   | `/api/Playlist/{id}/duplicate?novoNome=<nome>` |
 
-Playlists são referenciadas por `relativePath` — se uma música for renomeada/movida, a referência na playlist quebra (tradeoff aceito).
+Cada usuário gerencia suas **próprias** playlists (isoladas por `user_id`). Playlists são referenciadas por `relativePath` — se uma música for renomeada/movida, a referência na playlist quebra (tradeoff aceito).
 
 Nomes duplicados são impedidos pelo backend (tanto em criação quanto renomeação).
 
@@ -158,8 +182,9 @@ cd backend
 dotnet test
 ```
 
-122 testes unitários cobrindo: schema FTS5, MusicSearchService, MusicMetadataReader,
-MusicMetadataWriter, ArquivoService, PlaylistService, PlaylistController e MusicaController.
+146 testes unitários cobrindo: schema FTS5, MusicSearchService, MusicMetadataReader,
+MusicMetadataWriter, ArquivoService, PlaylistService, PlaylistController, MusicaController,
+UserService, JwtTokenService e AuthController.
 
 ## Lint
 
