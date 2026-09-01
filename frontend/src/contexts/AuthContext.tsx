@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AuthContext } from './useAuth';
-import { clearAuth, getStoredUser, setAuth, type AuthUser } from '../services/auth.storage';
+import { clearAuth, getStoredUser, getToken, setAuth, type AuthUser } from '../services/auth.storage';
 import { login as apiLogin, obterMe } from '../services/auth.service';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -11,16 +11,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     const validar = async () => {
-      const tokenExistente = getStoredUser();
-      if (!tokenExistente) {
+      if (!getStoredUser()) {
         if (active) setAutenticando(false);
         return;
       }
       try {
-        const { data } = await obterMe();
+        const usuario = await obterMe();
         if (!active) return;
-        if (data.Success && data.Data) {
-          setUser(data.Data);
+        if (usuario) {
+          setUser(usuario);
+          const token = getToken();
+          if (token) setAuth(token, usuario);
         } else {
           clearAuth();
           setUser(null);
@@ -42,12 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, senha: string) => {
-    const { data } = await apiLogin(username, senha);
-    if (!data.Success || !data.Data) {
-      throw new Error(data.Message ?? 'Falha ao autenticar.');
-    }
-    setAuth(data.Data.Token, data.Data.User);
-    setUser(data.Data.User);
+    const { token, user: novoUsuario } = await apiLogin(username, senha);
+    setAuth(token, novoUsuario);
+    setUser(novoUsuario);
   }, []);
 
   const logout = useCallback(() => {

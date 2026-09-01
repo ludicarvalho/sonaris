@@ -5,6 +5,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/useAuth';
 import { Musicas } from './pages/Musicas/Musicas';
 import Login from './pages/Login/Login';
+import { Usuarios } from './pages/Usuarios/Usuarios';
+import { RequireAdmin } from './pages/Usuarios/components/RequireAdmin';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, autenticando } = useAuth();
@@ -33,6 +35,16 @@ function App() {
               element={
                 <RequireAuth>
                   <Musicas />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <RequireAuth>
+                  <RequireAdmin>
+                    <Usuarios />
+                  </RequireAdmin>
                 </RequireAuth>
               }
             />

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 const routeTitles: Record<string, string> = {
   '/musicas': 'Músicas',
+  '/usuarios': 'Usuários',
 };
 
 const APP_NAME = 'Sonaris';

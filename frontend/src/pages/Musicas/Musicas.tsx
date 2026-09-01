@@ -1,5 +1,5 @@
-import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, ListMusic, LogOut, Moon, Music4, Plus, Sun } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { AlertCircle, ListMusic, LogOut, Moon, Music4, Plus, Sun, Users } from 'lucide-react';
 import type { FileSystemItem } from './types';
 import { arquivoDePath } from './types';
 import { pastaDe } from './utils';
@@ -22,9 +22,10 @@ import { useTrackNavigation } from './hooks/useTrackNavigation';
 
 function MusicasInner() {
     const { theme, toggleTheme } = useTheme();
-    const { user, logout } = useAuth();
+    const { user, isAdmin, logout } = useAuth();
     const { playlists, playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const path = searchParams.get('path') ?? '';
 
     const { items, loading, loadingMore, hasMore, totalItems, error, sentinelRef } = useFileBrowser(path);
@@ -116,6 +117,16 @@ function MusicasInner() {
                                 </div>
                             )}
                         </div>
+                        {isAdmin && (
+                            <button
+                                onClick={() => navigate('/usuarios')}
+                                title="Usuários"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                                <Users size={16} />
+                                <span className="hidden sm:inline">Usuários</span>
+                            </button>
+                        )}
                         <button
                             onClick={toggleTheme}
                             title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
