@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sonaris.Controllers;
@@ -11,6 +12,7 @@ using Sonaris.Services.Music;
 using Sonaris.Services.Search;
 
 [Route("api/Musica/[action]")]
+[Authorize]
 public class MusicaController(IArquivoService arquivoService, IMusicMetadataReader musicMetadataReader, IMusicMetadataWriter musicMetadataWriter, IConfiguration configuration, IMusicSearchService musicSearchService) : BaseController
 {
     private readonly IArquivoService arquivoService = arquivoService ?? throw new ArgumentNullException(nameof(arquivoService));
@@ -144,6 +146,7 @@ public class MusicaController(IArquivoService arquivoService, IMusicMetadataRead
     }
 
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> EditarMetadados([FromForm] EditarMetadadosRequest request)
     {
         BaseResponse<string> response = new();
