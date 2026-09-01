@@ -1,4 +1,3 @@
-using Sonaris.Domain.DTOs.Music;
 using Sonaris.Services.Music;
 using Xunit;
 

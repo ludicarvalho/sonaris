@@ -8,24 +8,18 @@ using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-public class UserServiceTests : IDisposable
+public class UserServiceTests : TestesBase
 {
     private readonly string _dbPath;
     private readonly UserService _service;
 
-    public UserServiceTests()
-    {
-        _dbPath = Path.Combine(Path.GetTempPath(), $"sonaris-user-tests-{Guid.NewGuid():N}.db");
+    public UserServiceTests() : base("user")
+    {;
         var config = new Mock<IConfiguration>();
         config.Setup(c => c["Settings:DatabasePath"]).Returns(_dbPath);
 
         DatabaseSchema.EnsureCreated($"Data Source={_dbPath}");
         _service = new UserService(config.Object, new PasswordHasher());
-    }
-
-    public void Dispose()
-    {
-        if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
     [Fact]
