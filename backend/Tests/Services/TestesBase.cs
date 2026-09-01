@@ -1,9 +1,11 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+
 using Moq;
-using Sonaris.Services.Search;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Services.Search;
 
 public abstract class TestesBase : IDisposable
 {
@@ -12,7 +14,11 @@ public abstract class TestesBase : IDisposable
     public TestesBase(string pastaPrefixo)
     {
         DbPath = Path.Combine(Path.GetTempPath(), $"sonaris-{pastaPrefixo}-tests", Guid.NewGuid().ToString("N") + ".db");
-        Directory.CreateDirectory(Path.GetDirectoryName(DbPath)!);
+
+        var path = Path.GetDirectoryName(DbPath);
+
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
 
         var config = new Mock<IConfiguration>();
         config.Setup(c => c["Settings:DatabasePath"]).Returns(DbPath);
@@ -22,28 +28,25 @@ public abstract class TestesBase : IDisposable
 
     public void Dispose()
     {
-        if (File.Exists(DbPath))
+        var diretorio = Path.GetDirectoryName(DbPath);
+        if (diretorio == null || !Directory.Exists(diretorio))
+            return;
+
+        // Tenta por vários intentos e delays para lidar com o SQLite em uso (pool de conexões)
+        for (int i = 0; i < 20; i++)
         {
-            for (int i = 0; i < 20; i++)
+            try
             {
-                try
-                {
-                    using var connection = new SqliteConnection($"Data Source={DbPath}");
-                    connection.Open();
-                    using var command = connection.CreateCommand();
-                    command.CommandText = "PRAGMA locking_mode = exclusive";
-                    command.ExecuteNonQuery();
-                    File.Delete(DbPath);
-                    return;
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(50);
-                }
-                catch (SqliteException)
-                {
-                    Thread.Sleep(50);
-                }
+                Directory.Delete(diretorio, recursive: true);
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(50);
+            }
+            catch (SqliteException)
+            {
+                Thread.Sleep(50);
             }
         }
     }
