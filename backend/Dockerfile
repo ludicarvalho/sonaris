@@ -9,7 +9,7 @@ RUN dotnet publish "./Sonaris.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/pu
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 7071
-RUN apt-get update && apt-get install -y --no-install-recommends python3-mutagen eyed3 \
+RUN apt-get update && apt-get install -y --no-install-recommends python3-mutagen \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Sonaris.Backend.dll"]
