@@ -87,9 +87,18 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+EnsureSchema(app);
 SeedAdminUser(app);
 
 app.Run();
+
+static void EnsureSchema(WebApplication app)
+{
+    var configuration = app.Services.GetRequiredService<IConfiguration>();
+    var dbPath = configuration["Settings:DatabasePath"]
+        ?? Path.Combine(AppContext.BaseDirectory, "sonaris.db");
+    DatabaseSchema.EnsureCreated($"Data Source={dbPath}");
+}
 
 static void SeedAdminUser(WebApplication app)
 {
