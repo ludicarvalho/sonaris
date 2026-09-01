@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace Sonaris.Services.Music;
 
@@ -6,8 +7,9 @@ using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
 
 /// <summary>
-/// Grava metadados ID3 e capa (APIC) em arquivos MP3 via subprocesso —
-/// mid3v2 para os campos de texto e eyeD3 para a imagem embutida.
+/// Grava metadados ID3 e capa (APIC) em arquivos MP3 via mutagen (Python).
+/// Força ID3 v2.3 e encoding Latin-1 (ISO-8859-1) na capa para compatibilidade
+/// com rádios automotivos (ex.: Duster 2016).
 /// </summary>
 public class MusicMetadataWriter : IMusicMetadataWriter
 {
@@ -18,23 +20,9 @@ public class MusicMetadataWriter : IMusicMetadataWriter
     {
         lockSalvamento.Wait();
 
-        string caminhoCapa = null;
-
         try
         {
-            SalvarTextos(request);
-
-            if (request.CapaBytes is { Length: > 0 })
-            {
-                caminhoCapa = Path.Combine(Path.GetTempPath(), $"sonaris-capa-{Guid.NewGuid():N}.jpg");
-                System.IO.File.WriteAllBytes(caminhoCapa, request.CapaBytes);
-
-                Executar("eyeD3", ["--remove-all-images", $"--add-image={caminhoCapa}:FRONT_COVER", request.AbsolutePath]);
-            }
-            else if (request.RemoverCapa)
-            {
-                Executar("eyeD3", ["--remove-all-images", request.AbsolutePath]);
-            }
+            ExecutarPython(GerarScript(request));
         }
         catch (SonarisException) { throw; }
         catch (Exception ex)
@@ -43,39 +31,68 @@ public class MusicMetadataWriter : IMusicMetadataWriter
         }
         finally
         {
-            if (caminhoCapa != null && System.IO.File.Exists(caminhoCapa))
-                System.IO.File.Delete(caminhoCapa);
-
             lockSalvamento.Release();
         }
     }
 
-    private static void SalvarTextos(SalvarMetadadosRequest request)
+    private static string GerarScript(SalvarMetadadosRequest request)
     {
-        Executar("mid3v2", [
-            $"--song={request.Titulo}",
-            $"--artist={request.Artista}",
-            $"--album={request.Album}",
-            $"--track={request.Faixa}",
-            $"--year={request.Ano}",
-            request.AbsolutePath
-        ]);
+        var script = new StringBuilder();
+        script.AppendLine("import sys, base64");
+        script.AppendLine("from mutagen.id3 import ID3, ID3NoHeaderError, APIC, TIT2, TPE1, TALB, TRCK, TYER");
+        script.AppendLine($"path = {PythonLiteral(request.AbsolutePath)}");
+
+        script.AppendLine("try:");
+        script.AppendLine("    tag = ID3(path)");
+        script.AppendLine("except ID3NoHeaderError:");
+        script.AppendLine("    tag = ID3()");
+
+        if (request.CapaBytes is { Length: > 0 } || request.RemoverCapa)
+            script.AppendLine("tag.delall('APIC')");
+
+        string titulo = request.Titulo ?? string.Empty;
+        string artista = request.Artista ?? string.Empty;
+        string album = request.Album ?? string.Empty;
+        string faixa = request.Faixa ?? string.Empty;
+        string ano = request.Ano ?? string.Empty;
+
+        script.AppendLine($"tag.setall('TIT2', [TIT2(encoding=0, text={PythonList(titulo)})])");
+        script.AppendLine($"tag.setall('TPE1', [TPE1(encoding=0, text={PythonList(artista)})])");
+        script.AppendLine($"tag.setall('TALB', [TALB(encoding=0, text={PythonList(album)})])");
+
+        if (faixa.Length > 0)
+            script.AppendLine($"tag.setall('TRCK', [TRCK(encoding=0, text={PythonList(faixa)})])");
+
+        if (ano.Length > 0)
+            script.AppendLine($"tag.setall('TYER', [TYER(encoding=0, text={PythonList(ano)})])");
+
+        if (request.CapaBytes is { Length: > 0 })
+        {
+            script.AppendLine($"data = base64.b64decode({PythonLiteral(Convert.ToBase64String(request.CapaBytes))})");
+            script.AppendLine("tag.add(APIC(encoding=0, mime='image/jpeg', type=3, desc='', data=data))");
+        }
+
+        script.AppendLine("tag.save(path, v2_version=3)");
+        return script.ToString();
     }
 
-    private static void Executar(string comando, IReadOnlyList<string> argumentos)
+    private static void ExecutarPython(string script)
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = comando,
+            FileName = "python3",
             UseShellExecute = false,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
 
-        foreach (string argumento in argumentos)
-            startInfo.ArgumentList.Add(argumento);
+        startInfo.ArgumentList.Add("-");
 
-        using var process = Process.Start(startInfo) ?? throw new SonarisException($"Não foi possível iniciar o comando '{comando}'.");
+        using var process = Process.Start(startInfo) ?? throw new SonarisException("Não foi possível iniciar o python3.");
+
+        process.StandardInput.Write(script);
+        process.StandardInput.Close();
 
         string stdout = process.StandardOutput.ReadToEnd();
         string stderr = process.StandardError.ReadToEnd();
@@ -83,13 +100,19 @@ public class MusicMetadataWriter : IMusicMetadataWriter
         if (!process.WaitForExit(TimeoutMs))
         {
             try { process.Kill(entireProcessTree: true); } catch { /* ignora */ }
-            throw new SonarisException($"O comando '{comando}' excedeu o tempo limite.");
+            throw new SonarisException("O tempo de salvamento dos metadados excedeu o limite.");
         }
 
         if (process.ExitCode != 0)
         {
             string detalhe = (stderr + stdout).Trim();
-            throw new SonarisException($"Falha ao executar '{comando}': {detalhe}");
+            throw new SonarisException($"Falha ao salvar os metadados via mutagen: {detalhe}");
         }
     }
+
+    private static string PythonLiteral(string valor)
+        => "'" + valor.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
+
+    private static string PythonList(string valor)
+        => "[" + PythonLiteral(valor) + "]";
 }
