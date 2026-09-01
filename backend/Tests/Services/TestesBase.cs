@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Moq;

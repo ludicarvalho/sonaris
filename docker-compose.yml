@@ -10,6 +10,13 @@ services:
       - ASPNETCORE_HTTP_PORTS=7071
       - Settings__MusicPath=/Musicas
       - Settings__DatabasePath=/data/sonaris.db
+      - Settings__JwtSecret=${JWT_SECRET:?defina JWT_SECRET no arquivo .env}
+      - Settings__JwtIssuer=${JWT_ISSUER:-sonaris}
+      - Settings__JwtAudience=${JWT_AUDIENCE:-sonaris}
+      - Settings__JwtExpiraEmMinutos=${JWT_EXPIRA_EM_MINUTOS:-1440}
+      - Settings__AdminUsername=${ADMIN_USERNAME:-admin}
+      - Settings__AdminPassword=${ADMIN_PASSWORD:-admin}
+      - Settings__AdminNome=${ADMIN_NOME:-Administrador}
     ports:
       - "${BACKEND_PORT:-5033}:7071"
     volumes:

@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Sonaris.Controllers;
@@ -11,6 +13,8 @@ namespace Sonaris.Backend.Tests.Controllers;
 
 public class PlaylistControllerTests
 {
+    private const string UserId = "user-teste";
+
     private readonly Mock<IPlaylistService> _playlistService;
     private readonly PlaylistController _controller;
 
@@ -18,6 +22,17 @@ public class PlaylistControllerTests
     {
         _playlistService = new Mock<IPlaylistService>();
         _controller = new PlaylistController(_playlistService.Object);
+
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, UserId),
+            new Claim("sub", UserId)
+        }, "Test"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
     }
 
     [Fact]
@@ -34,7 +49,7 @@ public class PlaylistControllerTests
             new() { Id = "1", Name = "Rock", CreatedAt = "2024-01-01", UpdatedAt = "2024-01-01", Tracks = [] },
             new() { Id = "2", Name = "Pop", CreatedAt = "2024-01-01", UpdatedAt = "2024-01-01", Tracks = [] }
         };
-        _playlistService.Setup(s => s.GetAll()).Returns(playlists);
+        _playlistService.Setup(s => s.GetAll(UserId)).Returns(playlists);
 
         var resultado = _controller.Listar();
 
@@ -48,7 +63,7 @@ public class PlaylistControllerTests
     [Fact]
     public void Listar_ServicoLancaExcecao_RetornaBadRequest()
     {
-        _playlistService.Setup(s => s.GetAll()).Throws(new InvalidOperationException("boom"));
+        _playlistService.Setup(s => s.GetAll(UserId)).Throws(new InvalidOperationException("boom"));
 
         var resultado = _controller.Listar();
 
@@ -62,7 +77,7 @@ public class PlaylistControllerTests
     public void ObterPorId_PlaylistExistente_RetornaOk()
     {
         var playlist = new PlaylistDto { Id = "1", Name = "Rock", CreatedAt = "2024-01-01", UpdatedAt = "2024-01-01" };
-        _playlistService.Setup(s => s.GetById("1")).Returns(playlist);
+        _playlistService.Setup(s => s.GetById(UserId, "1")).Returns(playlist);
 
         var resultado = _controller.ObterPorId("1");
 
@@ -75,7 +90,7 @@ public class PlaylistControllerTests
     [Fact]
     public void ObterPorId_PlaylistInexistente_RetornaBadRequest()
     {
-        _playlistService.Setup(s => s.GetById("nao-existe")).Returns((PlaylistDto)null);
+        _playlistService.Setup(s => s.GetById(UserId, "nao-existe")).Returns((PlaylistDto)null);
 
         var resultado = _controller.ObterPorId("nao-existe");
 
@@ -90,7 +105,7 @@ public class PlaylistControllerTests
     public void Criar_NomeValido_RetornaOkComPlaylist()
     {
         var created = new PlaylistDto { Id = "novo-id", Name = "Nova", CreatedAt = "2024-01-01", UpdatedAt = "2024-01-01" };
-        _playlistService.Setup(s => s.Create("Nova")).Returns(created);
+        _playlistService.Setup(s => s.Create(UserId, "Nova")).Returns(created);
 
         var resultado = _controller.Criar("Nova");
 
@@ -119,7 +134,7 @@ public class PlaylistControllerTests
     public void Renomear_NomeValido_RetornaOk()
     {
         var renamed = new PlaylistDto { Id = "1", Name = "Renomeada", CreatedAt = "2024-01-01", UpdatedAt = "2024-01-02" };
-        _playlistService.Setup(s => s.Rename("1", "Renomeada")).Returns(renamed);
+        _playlistService.Setup(s => s.Rename(UserId, "1", "Renomeada")).Returns(renamed);
 
         var resultado = _controller.Renomear("1", "Renomeada");
 
@@ -149,14 +164,14 @@ public class PlaylistControllerTests
         var response = Assert.IsType<BaseResponse<object>>(ok.Value);
         Assert.True(response.Success);
         Assert.Equal("Playlist deletada com sucesso.", response.Message);
-        _playlistService.Verify(s => s.Delete("1"), Times.Once);
+        _playlistService.Verify(s => s.Delete(UserId, "1"), Times.Once);
     }
 
     [Fact]
     public void AdicionarFaixa_CaminhoValido_RetornaOk()
     {
         var track = new PlaylistTrackDto { Id = 1, PlaylistId = "1", RelativePath = "musica.mp3", Position = 0 };
-        _playlistService.Setup(s => s.AddTrack("1", "musica.mp3")).Returns(track);
+        _playlistService.Setup(s => s.AddTrack(UserId, "1", "musica.mp3")).Returns(track);
 
         var resultado = _controller.AdicionarFaixa("1", "musica.mp3");
 
@@ -188,7 +203,7 @@ public class PlaylistControllerTests
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var response = Assert.IsType<BaseResponse<object>>(ok.Value);
         Assert.True(response.Success);
-        _playlistService.Verify(s => s.RemoveTrack("1", 42), Times.Once);
+        _playlistService.Verify(s => s.RemoveTrack(UserId, "1", 42), Times.Once);
     }
 
     [Fact]
@@ -199,20 +214,20 @@ public class PlaylistControllerTests
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var response = Assert.IsType<BaseResponse<object>>(ok.Value);
         Assert.True(response.Success);
-        _playlistService.Verify(s => s.ReorderTrack("1", 42, 2), Times.Once);
+        _playlistService.Verify(s => s.ReorderTrack(UserId, "1", 42, 2), Times.Once);
     }
 
     [Fact]
     public void Duplicar_NomeValido_RetornaOk()
     {
-        _playlistService.Setup(s => s.GetAll()).Returns(new List<PlaylistDto>());
+        _playlistService.Setup(s => s.GetAll(UserId)).Returns(new List<PlaylistDto>());
 
         var resultado = _controller.Duplicar("1", "Cópia");
 
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var response = Assert.IsType<BaseResponse<PlaylistDto>>(ok.Value);
         Assert.True(response.Success);
-        _playlistService.Verify(s => s.Duplicate("1", "Cópia"), Times.Once);
+        _playlistService.Verify(s => s.Duplicate(UserId, "1", "Cópia"), Times.Once);
     }
 
     [Theory]

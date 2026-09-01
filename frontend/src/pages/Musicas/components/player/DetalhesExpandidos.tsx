@@ -3,6 +3,7 @@ import { Loader2, Pencil, Save, X } from "lucide-react";
 import { Capa } from "./Capa";
 import { formatarDuracao, formatarTamanho } from "../../utils";
 import { AddToPlaylistButton } from "../AddToPlaylistButton";
+import { useAuth } from "../../../../contexts/useAuth";
 import type { EditarMetadadosParams } from "../../services/musicas.service";
 import type { FileSystemItem, MusicMetadata } from "../../types";
 
@@ -33,6 +34,7 @@ function MetaCard({ label, value, title }: { label: string; value: string; title
 }
 
 export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, track, onSalvarMetadados }: IDetalhesExpandidos) {
+    const { isAdmin } = useAuth();
     const [editando, setEditando] = useState(false);
     const [campos, setCampos] = useState<ICamposEdicao>({ titulo: "", artista: "", album: "", faixa: "", ano: "" });
     const [novaCapa, setNovaCapa] = useState<File | null>(null);
@@ -111,15 +113,17 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                             {!editando && (
                                 <div className="flex items-center gap-2 shrink-0">
                                     <AddToPlaylistButton relativePath={track.RelativePath} className="relative shrink-0" />
-                                    <button
-                                        type="button"
-                                        onClick={entrarEmEdicao}
-                                        title="Editar metadados"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                                    >
-                                        <Pencil size={14} />
-                                        Editar
-                                    </button>
+                                    {isAdmin && (
+                                        <button
+                                            type="button"
+                                            onClick={entrarEmEdicao}
+                                            title="Editar metadados"
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                        >
+                                            <Pencil size={14} />
+                                            Editar
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
