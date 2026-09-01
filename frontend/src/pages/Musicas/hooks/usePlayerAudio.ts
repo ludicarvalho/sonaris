@@ -6,6 +6,7 @@ import { usePlayerKeyboard } from "./usePlayerKeyboard";
 
 export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext: boolean, onPrev: () => void, onNext: () => void, onClose: () => void) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const buscaPendenteRef = useRef<number | null>(null);
     const [tocando, setTocando] = useState(false);
     const [tempoAtual, setTempoAtual] = useState(0);
     const [tempoTotal, setTempoTotal] = useState(0);
@@ -50,6 +51,15 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
     const atualizarTempo = () => {
         const audio = audioRef.current;
         if (!audio) return;
+        if (buscaPendenteRef.current !== null) return;
+        setTempoAtual(audio.currentTime);
+        if (audio.duration) setProgresso((audio.currentTime / audio.duration) * 100);
+    };
+
+    const aoConcluirBusca = () => {
+        const audio = audioRef.current;
+        buscaPendenteRef.current = null;
+        if (!audio) return;
         setTempoAtual(audio.currentTime);
         if (audio.duration) setProgresso((audio.currentTime / audio.duration) * 100);
     };
@@ -71,7 +81,11 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         if (!audio) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-        audio.currentTime = frac * audio.duration;
+        const alvo = frac * audio.duration;
+        buscaPendenteRef.current = alvo;
+        setTempoAtual(alvo);
+        if (audio.duration) setProgresso(frac * 100);
+        audio.currentTime = alvo;
     };
 
     const alterarVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +129,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
             if (hasNext) onNext();
         },
         onTimeUpdate: atualizarTempo,
+        onSeeked: aoConcluirBusca,
         onLoadedMetadata: aoCarregarDuracao,
         onProgress: atualizarBuffer,
         onVolumeChange: () => {
