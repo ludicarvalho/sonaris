@@ -1,21 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowLeft,
-  KeyRound,
-  Loader2,
-  Moon,
-  ShieldCheck,
-  ShieldOff,
-  Sun,
-  UserPlus,
-  Users,
-} from 'lucide-react';
+import { AlertCircle, ArrowLeft, KeyRound, Loader2, ShieldCheck, ShieldOff, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import { usePageTitle } from '../../hooks/usePageTitle';
-import { useTheme } from '../../contexts/useTheme';
 import { formatarData } from '../../utils/text';
+import { AppShell } from '../../components/AppShell';
 import {
   alterarPapel,
   alterarSenha,
@@ -27,12 +16,11 @@ import {
 import { CriarUsuarioDialog } from './components/CriarUsuarioDialog';
 import { AlterarSenhaDialog } from './components/AlterarSenhaDialog';
 
-const seletorIcone =
+const botaoIcone =
     "inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/70 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors";
 
 export function Usuarios() {
     const navigate = useNavigate();
-    const { theme, toggleTheme } = useTheme();
     const { user } = useAuth();
     usePageTitle('Usuários');
 
@@ -100,36 +88,17 @@ export function Usuarios() {
     const inicial = (u: UserDto) => (u.NomeExibicao || u.Username).trim().charAt(0).toUpperCase() || '?';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 text-slate-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 dark:text-white">
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                <header className="flex items-start justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/40 shrink-0">
-                            <Users size={24} className="text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold">Usuários</h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Gerencie contas e permissões de acesso</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => navigate('/musicas')}
-                            title="Voltar para músicas"
-                            className={seletorIcone}
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
-                        <button
-                            onClick={toggleTheme}
-                            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                            className={seletorIcone}
-                        >
-                            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                        </button>
-                    </div>
-                </header>
-
+        <AppShell
+            titulo="Usuários"
+            subtitulo="Gerencie contas e permissões de acesso"
+            icone={<Users size={24} className="text-white" />}
+            acoes={
+                <button onClick={() => navigate('/musicas')} title="Voltar para músicas" className={botaoIcone}>
+                    <ArrowLeft size={18} />
+                </button>
+            }
+        >
+            <div className="max-w-4xl mx-auto px-4 pb-10">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                         {loading ? 'Carregando...' : `${usuarios.length} usuário${usuarios.length === 1 ? '' : 's'} cadastrado${usuarios.length === 1 ? '' : 's'}`}
@@ -255,6 +224,6 @@ export function Usuarios() {
                 onFechar={() => setSenhaUsuario(null)}
                 onSalvar={(novaSenha) => senhaUsuario ? salvarSenha(senhaUsuario.Id, novaSenha) : Promise.resolve()}
             />
-        </div>
+        </AppShell>
     );
 }

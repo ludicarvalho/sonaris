@@ -1,5 +1,6 @@
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, ListMusic, LogOut, Moon, Music4, Plus, Sun, Users } from 'lucide-react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { AlertCircle, Music4 } from 'lucide-react';
 import type { FileSystemItem } from './types';
 import { arquivoDePath } from './types';
 import { pastaDe } from './utils';
@@ -9,27 +10,22 @@ import { ListaMusicas } from './components/ListaMusicas';
 import { PainelPlaylist } from './components/PainelPlaylist';
 import { PlayerMusica } from './components/PlayerMusica';
 import { CriarPlaylistDialog } from './components/CriarPlaylistDialog';
+import { SidebarPlaylists } from './components/SidebarPlaylists';
 import { PlaylistProvider } from '../../contexts/PlaylistContext';
 import { usePageTitle } from '../../hooks/usePageTitle';
-import { useTheme } from '../../contexts/useTheme';
 import { usePlaylist } from '../../hooks/usePlaylist';
-import { useAuth } from '../../contexts/useAuth';
+import { AppShell } from '../../components/AppShell';
 import { removerExensaoArquivo } from '../../utils/text';
-import { dropdown } from './styles';
 import { useFileBrowser } from './hooks/useFileBrowser';
-import { usePlaylistMenu } from './hooks/usePlaylistMenu';
 import { useTrackNavigation } from './hooks/useTrackNavigation';
 
 function MusicasInner() {
-    const { theme, toggleTheme } = useTheme();
-    const { user, isAdmin, logout } = useAuth();
     const { playlists, playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
+    const [dialogCriarAberto, setDialogCriarAberto] = useState(false);
     const path = searchParams.get('path') ?? '';
 
     const { items, loading, loadingMore, hasMore, totalItems, error, sentinelRef } = useFileBrowser(path);
-    const { aberto, setAberto, dialogCriarAberto, setDialogCriarAberto, menuRef } = usePlaylistMenu();
     const { currentTrack, setCurrentTrack, faixasPlaylist, setFaixasPlaylist, faixaAtualIdx, irParaFaixa } = useTrackNavigation();
 
     const tituloFaixa = currentTrack ? removerExensaoArquivo(currentTrack.Name) : undefined;
@@ -63,94 +59,23 @@ function MusicasInner() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 text-slate-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 dark:text-white">
-            <div className={`max-w-4xl mx-auto px-4 py-8 ${currentTrack ? 'pb-44' : 'pb-12'}`}>
-                <header className="flex items-start justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-600/40 shrink-0">
-                            <Music4 size={24} className="text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold">Músicas</h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Navegue pelas pastas e clique em uma faixa para tocar</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <div className="relative" ref={menuRef}>
-                            <button
-                                onClick={() => setAberto(!aberto)}
-                                title="Playlists"
-                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                            >
-                                <ListMusic size={16} />
-                                <span className="hidden sm:inline">Playlists</span>
-                            </button>
-                            {aberto && (
-                                <div className={dropdown}>
-                                    <button
-                                        onClick={() => { setAberto(false); setDialogCriarAberto(true); }}
-                                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                                    >
-                                        <Plus size={15} />
-                                        Criar playlist
-                                    </button>
-                                    {playlists.length > 0 && (
-                                        <>
-                                            <div className="border-t border-slate-100 dark:border-slate-700" />
-                                            <div className="max-h-64 overflow-y-auto py-1">
-                                                {playlists.map((p) => (
-                                                    <button
-                                                        key={p.Id}
-                                                        onClick={() => { setPlaylistAtiva(p); setAberto(false); }}
-                                                        className={`flex items-center gap-2 w-full px-4 py-2.5 text-sm transition-colors ${playlistAtiva?.Id === p.Id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                                                    >
-                                                        <ListMusic size={15} className="shrink-0" />
-                                                        <span className="truncate">{p.Name}</span>
-                                                        {p.Tracks && p.Tracks.length > 0 && (
-                                                            <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">{p.Tracks.length}</span>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        {isAdmin && (
-                            <button
-                                onClick={() => navigate('/usuarios')}
-                                title="Usuários"
-                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                            >
-                                <Users size={16} />
-                                <span className="hidden sm:inline">Usuários</span>
-                            </button>
-                        )}
-                        <button
-                            onClick={toggleTheme}
-                            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                            className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/70 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                        >
-                            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                        </button>
-                        <div className="flex items-center gap-2">
-                            {user && (
-                                <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400 max-w-[10rem] truncate">
-                                    {user.nomeExibicao || user.username}
-                                </span>
-                            )}
-                            <button
-                                onClick={logout}
-                                title="Sair"
-                                className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                            >
-                                <LogOut size={18} />
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
+        <AppShell
+            titulo="Músicas"
+            subtitulo="Navegue pelas pastas e clique em uma faixa para tocar"
+            icone={<Music4 size={24} className="text-white" />}
+            sidebarExtra={(fechar) => (
+                <SidebarPlaylists
+                    playlists={playlists}
+                    playlistAtiva={playlistAtiva}
+                    onCriar={() => setDialogCriarAberto(true)}
+                    onSelecionar={(playlist) => {
+                        setPlaylistAtiva(playlist);
+                        fechar();
+                    }}
+                />
+            )}
+        >
+            <div className={`max-w-4xl mx-auto px-4 pt-0 ${currentTrack ? 'pb-44' : 'pb-12'}`}>
                 {error && (
                     <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-300 rounded-lg px-4 py-3 mb-5 text-sm">
                         <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -211,7 +136,7 @@ function MusicasInner() {
                     setPlaylistAtiva(nova);
                 }}
             />
-        </div>
+        </AppShell>
     );
 }
 
