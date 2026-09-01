@@ -39,10 +39,13 @@ public class MusicMetadataWriter : IMusicMetadataWriter
     {
         var script = new StringBuilder();
         script.AppendLine("import sys, base64");
-        script.AppendLine("from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB, TRCK, TYER");
+        script.AppendLine("from mutagen.id3 import ID3, ID3NoHeaderError, APIC, TIT2, TPE1, TALB, TRCK, TYER");
         script.AppendLine($"path = {PythonLiteral(request.AbsolutePath)}");
 
-        script.AppendLine("tag = ID3()");
+        script.AppendLine("try:");
+        script.AppendLine("    tag = ID3(path)");
+        script.AppendLine("except ID3NoHeaderError:");
+        script.AppendLine("    tag = ID3()");
 
         if (request.CapaBytes is { Length: > 0 } || request.RemoverCapa)
             script.AppendLine("tag.delall('APIC')");

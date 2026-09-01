@@ -128,6 +128,32 @@ public class MusicMetadataWriterTests : IDisposable
         Assert.Contains("APIC_COUNT 0", output);
     }
 
+    [Fact]
+    public void SalvarMetadados_EditarSomenteTexto_PreservaCapaExistente()
+    {
+        if (!MutagenDisponivel())
+            return;
+
+        var caminho = CriarMusica();
+        _writer.SalvarMetadados(new SalvarMetadadosRequest
+        {
+            AbsolutePath = caminho,
+            Titulo = "T",
+            CapaBytes = CriarJpeg()
+        });
+
+        _writer.SalvarMetadados(new SalvarMetadadosRequest
+        {
+            AbsolutePath = caminho,
+            Titulo = "Novo Título",
+            Artista = "Novo Artista"
+        });
+
+        var output = ExecutarPython("import sys; from mutagen.id3 import ID3; tag = ID3(sys.argv[1]); print('APIC_COUNT', len(tag.getall('APIC'))); print('TIT2', tag['TIT2'].text[0])", caminho);
+        Assert.Contains("APIC_COUNT 1", output);
+        Assert.Contains("TIT2 Novo Título", output);
+    }
+
     private static string ExecutarPython(string script, string caminho)
     {
         var psi = new System.Diagnostics.ProcessStartInfo("python3")
