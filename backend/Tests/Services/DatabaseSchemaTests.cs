@@ -80,7 +80,7 @@ public class DatabaseSchemaTests : TestesBase
         {
             connection.Open();
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "CREATE TABLE playlist (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)";
+            cmd.CommandText = "DROP TABLE IF EXISTS playlist; CREATE TABLE playlist (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)";
             cmd.ExecuteNonQuery();
         }
 
