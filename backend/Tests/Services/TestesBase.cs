@@ -29,7 +29,8 @@ public abstract class TestesBase : IDisposable
     public void Dispose()
     {
         var diretorio = Path.GetDirectoryName(DbPath);
-        if (diretorio == null || !Directory.Exists(diretorio)) return;
+        if (diretorio == null || !Directory.Exists(diretorio))
+            return;
 
         // Tenta por vários intentos e delays para lidar com o SQLite em uso (pool de conexões)
         for (int i = 0; i < 20; i++)

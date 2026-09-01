@@ -82,7 +82,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference((opt) =>
+    {
+        opt.Title = "Sonaris API";
+        //opt.Version = "1.0.0";
+        //opt.Description = "API do Sonaris - Sistema de gerenciamento de músicas e playlists.";
+        opt.Theme = ScalarTheme.Moon;
+        opt.Layout = ScalarLayout.Classic;
+    });
 }
 
 app.UseCors("AllowAll");
