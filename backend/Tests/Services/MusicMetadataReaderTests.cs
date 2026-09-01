@@ -1,29 +1,21 @@
-using Sonaris.Services.Music;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-public class MusicMetadataReaderTests : IDisposable
+using Sonaris.Services.Music;
+
+public class MusicMetadataReaderTests : TestesBase
 {
-    private readonly string _musicPath;
     private readonly MusicMetadataReader _reader;
 
-    public MusicMetadataReaderTests()
+    public MusicMetadataReaderTests() : base("metadata")
     {
-        _musicPath = Path.Combine(Path.GetTempPath(), $"sonaris-metadata-tests-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(_musicPath);
         _reader = new MusicMetadataReader();
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_musicPath))
-            Directory.Delete(_musicPath, recursive: true);
     }
 
     private string CriarMusica(string nomeDiretorio = "album dir")
     {
-        var diretorio = Path.Combine(_musicPath, nomeDiretorio);
+        var diretorio = Path.Combine(Path.GetDirectoryName(DbPath), nomeDiretorio);
         Directory.CreateDirectory(diretorio);
 
         var caminho = Path.Combine(diretorio, "musica.mp3");
@@ -33,9 +25,10 @@ public class MusicMetadataReaderTests : IDisposable
 
     private void CriarImagem(string nome, string diretorio = null)
     {
-        var baseDir = diretorio is null
+        var baseDir = diretorio == null
             ? Path.GetDirectoryName(CriarMusica())
-            : Path.Combine(_musicPath, diretorio);
+            : Path.Combine(Path.GetDirectoryName(DbPath), diretorio);
+        
         File.WriteAllBytes(Path.Combine(baseDir, nome), [1, 2, 3]);
     }
 
