@@ -10,15 +10,14 @@ namespace Sonaris.Backend.Tests.Services;
 
 public class UserServiceTests : TestesBase
 {
-    private readonly string _dbPath;
     private readonly UserService _service;
 
     public UserServiceTests() : base("user")
-    {;
+    {
         var config = new Mock<IConfiguration>();
-        config.Setup(c => c["Settings:DatabasePath"]).Returns(_dbPath);
+        config.Setup(c => c["Settings:DatabasePath"]).Returns(DbPath);
 
-        DatabaseSchema.EnsureCreated($"Data Source={_dbPath}");
+        DatabaseSchema.EnsureCreated($"Data Source={DbPath}");
         _service = new UserService(config.Object, new PasswordHasher());
     }
 
