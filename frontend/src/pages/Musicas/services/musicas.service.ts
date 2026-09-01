@@ -1,4 +1,5 @@
 import { http } from '../../../services/http';
+import { getToken } from '../../../services/auth.storage';
 import type { BasePagedResponse, BaseResponse } from '../../../types/api';
 import type { FileSystemItem, MusicMetadata } from '../types';
 
@@ -15,8 +16,11 @@ export const buscarMusicasPorNome = (termo: string, signal?: AbortSignal) =>
     signal,
   });
 
-export const streamUrl = (relativePath: string) =>
-  `${BASE_URL}/api/Musica/StreamArquivo?fileName=${encodeURIComponent(relativePath)}`;
+export const streamUrl = (relativePath: string) => {
+  const token = getToken();
+  const query = token ? `&token=${encodeURIComponent(token)}` : '';
+  return `${BASE_URL}/api/Musica/StreamArquivo?fileName=${encodeURIComponent(relativePath)}${query}`;
+};
 
 export const getMusicaMetadata = (fileName: string) =>
   http.get<BaseResponse<MusicMetadata>>('/api/Musica/BuscarMusicaMetadata', {

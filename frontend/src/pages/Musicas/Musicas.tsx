@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, ListMusic, Moon, Music4, Plus, Sun } from 'lucide-react';
+import { AlertCircle, ListMusic, LogOut, Moon, Music4, Plus, Sun } from 'lucide-react';
 import type { FileSystemItem } from './types';
 import { arquivoDePath } from './types';
 import { pastaDe } from './utils';
@@ -13,6 +13,7 @@ import { PlaylistProvider } from '../../contexts/PlaylistContext';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import { useTheme } from '../../contexts/useTheme';
 import { usePlaylist } from '../../hooks/usePlaylist';
+import { useAuth } from '../../contexts/useAuth';
 import { removerExensaoArquivo } from '../../utils/text';
 import { dropdown } from './styles';
 import { useFileBrowser } from './hooks/useFileBrowser';
@@ -21,6 +22,7 @@ import { useTrackNavigation } from './hooks/useTrackNavigation';
 
 function MusicasInner() {
     const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
     const { playlists, playlistAtiva, setPlaylistAtiva, criar } = usePlaylist();
     const [searchParams, setSearchParams] = useSearchParams();
     const path = searchParams.get('path') ?? '';
@@ -121,6 +123,20 @@ function MusicasInner() {
                         >
                             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
+                        <div className="flex items-center gap-2">
+                            {user && (
+                                <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400 max-w-[10rem] truncate">
+                                    {user.nomeExibicao || user.username}
+                                </span>
+                            )}
+                            <button
+                                onClick={logout}
+                                title="Sair"
+                                className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-200/70 dark:bg-slate-800/60 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                <LogOut size={18} />
+                            </button>
+                        </div>
                     </div>
                 </header>
 
