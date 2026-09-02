@@ -8,7 +8,7 @@ import { useMediaSession } from "../hooks/useMediaSession";
 import { BlocoCentral } from "./player/BlocoCentral";
 import { BlocoDireita } from "./player/BlocoDireita";
 import { BlocoEsquerda } from "./player/BlocoEsquerda";
-import { DetalhesExpandidos } from "./player/DetalhesExpandidos";
+import { DetalhesExpandidos } from "./player/DestalhesExpandidos/DetalhesExpandidos";
 import { BarraProgresso } from "./player/BarraProgresso";
 
 interface IPlayerMusica {

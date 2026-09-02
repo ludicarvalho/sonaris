@@ -56,3 +56,11 @@ export function arquivoDePath(relativePath: string): FileSystemItem {
     LastModified: '',
   };
 }
+
+export interface ICamposEdicao {
+    titulo: string;
+    artista: string;
+    album: string;
+    faixa: string;
+    ano: string;
+}

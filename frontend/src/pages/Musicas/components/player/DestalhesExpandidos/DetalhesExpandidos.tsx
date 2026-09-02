@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Loader2, Pencil, Save, X } from "lucide-react";
-import { Capa } from "./Capa";
-import { formatarDuracao, formatarTamanho } from "../../utils";
-import { AddToPlaylistButton } from "../AddToPlaylistButton";
-import { useAuth } from "../../../../contexts/useAuth";
-import type { EditarMetadadosParams } from "../../services/musicas.service";
-import type { FileSystemItem, MusicMetadata } from "../../types";
+import { formatarDuracao, formatarTamanho } from "../../../utils";
+import { AddToPlaylistButton } from "../../AddToPlaylistButton";
+import { useAuth } from "../../../../../contexts/useAuth";
+import { Capa } from "../Capa";
+import type { EditarMetadadosParams } from "../../../services/musicas.service";
+import type { FileSystemItem, ICamposEdicao, MusicMetadata } from "../../../types";
+import { MetaTagField } from "./components/MetaTagField";
+import { MetaTagFieldEdit } from "./components/MetaTagFieldEdit";
 
 interface IDetalhesExpandidos {
     capaUrl: string | null;
@@ -14,23 +16,6 @@ interface IDetalhesExpandidos {
     metadata: MusicMetadata | null;
     track: FileSystemItem;
     onSalvarMetadados: (params: EditarMetadadosParams) => Promise<void>;
-}
-
-interface ICamposEdicao {
-    titulo: string;
-    artista: string;
-    album: string;
-    faixa: string;
-    ano: string;
-}
-
-function MetaCard({ label, value, title }: { label: string; value: string; title?: string }) {
-    return (
-        <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
-            <dt className="text-xs text-slate-400">{label}</dt>
-            <dd className="font-medium truncate" title={title}>{value}</dd>
-        </div>
-    );
 }
 
 export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, track, onSalvarMetadados }: IDetalhesExpandidos) {
@@ -80,18 +65,6 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
         }
     };
 
-    const campo = (chave: keyof ICamposEdicao, rotulo: string) => (
-        <label className="block">
-            <span className="text-xs text-slate-400">{rotulo}</span>
-            <input
-                type="text"
-                value={campos[chave]}
-                onChange={(e) => setCampos((prev) => ({ ...prev, [chave]: e.target.value }))}
-                className="mt-1 w-full bg-slate-50 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-        </label>
-    );
-
     const inputClasse = "block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-blue-700 cursor-pointer";
 
     return (
@@ -100,16 +73,10 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                 <div className="flex flex-col sm:flex-row gap-6 sm:items-start">
                     <Capa capaUrl={capaUrl} grande />
                     <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">
-                                    {editando ? "Editar metadados" : "Agora tocando"}
-                                </p>
-                                <h2 className="text-2xl font-bold mt-1 truncate">{editando ? track.Name : titulo}</h2>
-                                <p className="text-slate-400 dark:text-slate-500 truncate">
-                                    {editando ? track.RelativePath : artistaAlbum}
-                                </p>
-                            </div>
+                        <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">
+                                {editando ? "Editar metadados" : "Agora tocando"}
+                            </p>
                             {!editando && (
                                 <div className="flex items-center gap-2 shrink-0">
                                     <AddToPlaylistButton relativePath={track.RelativePath} className="relative shrink-0" />
@@ -128,14 +95,21 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                             )}
                         </div>
 
+                        {!editando && (<div className="min-w-0">
+                            <h2 className="text-2xl font-bold my-1 truncate" title={titulo} >{editando ? track.Name : titulo}</h2>
+                            <p className="text-slate-400 dark:text-slate-500 truncate">
+                                {editando ? track.RelativePath : artistaAlbum}
+                            </p>
+                        </div>)}
+                        {editando && (<h2 className="font-bold my-1" title={track.Name} >{track.Name}</h2>)}
                         {editando ? (
                             <form onSubmit={salvar} className="mt-5 space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div className="sm:col-span-2">{campo("titulo", "Título")}</div>
-                                    {campo("artista", "Artista")}
-                                    {campo("album", "Álbum")}
-                                    {campo("faixa", "Faixa")}
-                                    {campo("ano", "Ano")}
+                                    <div className="sm:col-span-2">{MetaTagFieldEdit({ campos, chave: "titulo", rotulo: "Título", setCampos })}</div>
+                                    {MetaTagFieldEdit({ campos, chave: "artista", rotulo: "Artista", setCampos })}
+                                    {MetaTagFieldEdit({ campos, chave: "album", rotulo: "Álbum", setCampos })}
+                                    {MetaTagFieldEdit({ campos, chave: "faixa", rotulo: "Faixa", setCampos })}
+                                    {MetaTagFieldEdit({ campos, chave: "ano", rotulo: "Ano", setCampos })}
                                 </div>
 
                                 <div className="rounded-lg bg-slate-50 dark:bg-slate-900 p-3 space-y-2">
@@ -173,15 +147,7 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                                     </p>
                                 )}
 
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="submit"
-                                        disabled={salvando}
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        {salvando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                                        {salvando ? "Salvando..." : "Salvar"}
-                                    </button>
+                                <div className="flex justify-between items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setEditando(false)}
@@ -191,16 +157,24 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                                         <X size={16} />
                                         Cancelar
                                     </button>
+                                    <button
+                                        type="submit"
+                                        disabled={salvando}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {salvando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                        {salvando ? "Salvando..." : "Salvar"}
+                                    </button>
                                 </div>
                             </form>
                         ) : (
                             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5 text-sm">
-                                <MetaCard label="Álbum" value={metadata?.Album || '—'} title={metadata?.Album ?? ''} />
-                                <MetaCard label="Faixa" value={metadata?.Track || '—'} />
-                                <MetaCard label="Ano" value={metadata?.Year || '—'} />
-                                <MetaCard label="Duração" value={formatarDuracao(metadata?.Duration ?? null) || '—'} />
-                                <MetaCard label="Bitrate" value={metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'} />
-                                <MetaCard label="Tamanho" value={formatarTamanho(track.Size)} />
+                                <MetaTagField label="Álbum" value={metadata?.Album || '—'} title={metadata?.Album ?? ''} />
+                                <MetaTagField label="Faixa" value={metadata?.Track || '—'} />
+                                <MetaTagField label="Ano" value={metadata?.Year || '—'} />
+                                <MetaTagField label="Duração" value={formatarDuracao(metadata?.Duration ?? null) || '—'} />
+                                <MetaTagField label="Bitrate" value={metadata?.Bitrate ? `${metadata.Bitrate} kbps` : '—'} />
+                                <MetaTagField label="Tamanho" value={formatarTamanho(track.Size)} />
                             </dl>
                         )}
                     </div>
