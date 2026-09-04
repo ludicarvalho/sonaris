@@ -1,4 +1,5 @@
 import { http } from '../../../services/http';
+import { erroParaMensagem, mensagemDeBlobErro } from '../../../services/httpError';
 
 export interface DownloadTracksRequest {
     trackIds: number[];
@@ -24,18 +25,27 @@ export async function downloadPlaylistTracks(
     playlistId: string,
     trackIds: number[],
 ): Promise<DownloadResponse> {
-    const response = await http.post<Blob>(
-        `/api/Playlist/${playlistId}/download`,
-        { trackIds } as DownloadTracksRequest,
-        { responseType: 'blob' },
-    );
+    try {
+        const response = await http.post<Blob>(
+            `/api/Playlist/${playlistId}/download`,
+            { trackIds } as DownloadTracksRequest,
+            { responseType: 'blob' },
+        );
 
-    const contentDisposition = response.headers['content-disposition'] as string | undefined;
+        if (response.data.type === 'application/json') {
+            const mensagem = await mensagemDeBlobErro(response.data);
+            throw new Error(mensagem ?? 'Não foi possível concluir o download.');
+        }
 
-    return {
-        blob: response.data,
-        fileName: extrairFileName(contentDisposition ?? null),
-    };
+        const contentDisposition = response.headers['content-disposition'] as string | undefined;
+
+        return {
+            blob: response.data,
+            fileName: extrairFileName(contentDisposition ?? null),
+        };
+    } catch (error) {
+        throw new Error(await erroParaMensagem(error));
+    }
 }
 
 export function triggerDownload(blob: Blob, fileName?: string) {

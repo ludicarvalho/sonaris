@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, GripVertical, ListMusic, Music, Pencil, Trash2, X } from 'lucide-react';
 import { usePlaylist } from '../../../hooks/usePlaylist';
+import { useToast } from '../../../contexts/useToast';
 import type { FileSystemItem, PlaylistTrack } from '../types';
 import { arquivoDePath } from '../types';
 import { removerExensaoArquivo } from '../../../utils/text';
@@ -14,6 +15,7 @@ interface IPainelPlaylist {
 
 export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
     const { playlistAtiva, setPlaylistAtiva, removerFaixa, renomear, deletar, reordenarFaixa } = usePlaylist();
+    const toast = useToast();
     const [editandoNome, setEditandoNome] = useState(false);
     const [novoNome, setNovoNome] = useState('');
     const [arrastandoId, setArrastandoId] = useState<number | null>(null);
@@ -53,21 +55,18 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
         try {
             const { blob, fileName } = await downloadPlaylistTracks(playlistAtiva.Id, selectedIds);
 
-            if (blob.type === 'application/json') {
-                const text = await blob.text();
-                console.error('Erro ao baixar:', text);
-                return;
-            }
-
             if (selectedIds.length === 1) {
                 triggerDownload(blob, fileName);
             } else {
                 triggerDownload(blob, `${playlistAtiva.Name}.zip`);
             }
 
+            toast.success('Download iniciado.');
             setSelecionados(new Set());
         } catch (error) {
+            const mensagem = error instanceof Error ? error.message : 'Não foi possível concluir o download.';
             console.error('Erro ao baixar:', error);
+            toast.error(mensagem);
         } finally {
             setBaixando(false);
         }

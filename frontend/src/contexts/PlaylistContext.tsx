@@ -1,6 +1,8 @@
 import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Playlist } from '../pages/Musicas/types';
 import * as playlistService from '../pages/Musicas/services/playlist.service';
+import { erroParaMensagem } from '../services/httpError';
+import { useToast } from './useToast';
 
 export interface PlaylistContextType {
     playlists: Playlist[];
@@ -24,6 +26,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [playlistAtiva, setPlaylistAtiva] = useState<Playlist | null>(null);
     const playlistAtivaRef = useRef<Playlist | null>(null);
+    const toast = useToast();
 
     useEffect(() => {
         playlistAtivaRef.current = playlistAtiva;
@@ -42,52 +45,91 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
                     setPlaylistAtiva(atualizada);
                 }
             }
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [toast]);
 
     useEffect(() => {
         recarregar();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const criar = async (name: string) => {
-        const res = await playlistService.criarPlaylist(name);
-        const nova = res.data.Data;
-        if (!nova) throw new Error('Erro ao criar playlist');
-        await recarregar();
-        return nova;
+        try {
+            const res = await playlistService.criarPlaylist(name);
+            const nova = res.data.Data;
+            if (!nova) throw new Error('Erro ao criar playlist.');
+            await recarregar();
+            toast.success('Playlist criada com sucesso.');
+            return nova;
+        } catch (error) {
+            const mensagem = await erroParaMensagem(error);
+            toast.error(mensagem);
+            throw new Error(mensagem);
+        }
     };
 
     const renomear = async (id: string, name: string) => {
-        await playlistService.renomearPlaylist(id, name);
-        await recarregar();
+        try {
+            await playlistService.renomearPlaylist(id, name);
+            await recarregar();
+            toast.success('Playlist renomeada com sucesso.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     const deletar = async (id: string) => {
-        await playlistService.deletarPlaylist(id);
-        if (playlistAtiva?.Id === id) setPlaylistAtiva(null);
-        await recarregar();
+        try {
+            await playlistService.deletarPlaylist(id);
+            if (playlistAtiva?.Id === id) setPlaylistAtiva(null);
+            await recarregar();
+            toast.success('Playlist deletada com sucesso.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     const adicionarFaixa = async (playlistId: string, relativePath: string) => {
-        await playlistService.adicionarFaixaPlaylist(playlistId, relativePath);
-        await recarregar();
+        try {
+            await playlistService.adicionarFaixaPlaylist(playlistId, relativePath);
+            await recarregar();
+            toast.success('Música adicionada à playlist.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     const removerFaixa = async (playlistId: string, trackId: number) => {
-        await playlistService.removerFaixaPlaylist(playlistId, trackId);
-        await recarregar();
+        try {
+            await playlistService.removerFaixaPlaylist(playlistId, trackId);
+            await recarregar();
+            toast.success('Música removida da playlist.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     const reordenarFaixa = async (playlistId: string, trackId: number, newPosition: number) => {
-        await playlistService.reordenarFaixaPlaylist(playlistId, trackId, newPosition);
-        await recarregar();
+        try {
+            await playlistService.reordenarFaixaPlaylist(playlistId, trackId, newPosition);
+            await recarregar();
+            toast.success('Faixa reordenada.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     const duplicar = async (id: string, newName: string) => {
-        await playlistService.duplicarPlaylist(id, newName);
-        await recarregar();
+        try {
+            await playlistService.duplicarPlaylist(id, newName);
+            await recarregar();
+            toast.success('Playlist duplicada com sucesso.');
+        } catch (error) {
+            toast.error(await erroParaMensagem(error));
+        }
     };
 
     return (
