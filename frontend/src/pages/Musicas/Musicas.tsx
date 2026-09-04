@@ -67,7 +67,10 @@ function MusicasInner() {
                 <SidebarPlaylists
                     playlists={playlists}
                     playlistAtiva={playlistAtiva}
-                    onCriar={() => setDialogCriarAberto(true)}
+                    onCriar={() => {
+                        setDialogCriarAberto(true);
+                        fechar();
+                    }}
                     onSelecionar={(playlist) => {
                         setPlaylistAtiva(playlist);
                         fechar();
