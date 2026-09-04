@@ -1,36 +1,27 @@
 using System.IO.Compression;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Sonaris.Services.Download;
 
+using Sonaris.Domain.DTOs.Download;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Services.Playlists;
 
-public class PlaylistDownloadService : IPlaylistDownloadService
+public class PlaylistDownloadService(
+      IPlaylistService playlistService
+    , IConfiguration configuration
+    , ILogger<PlaylistDownloadService> logger)
+    : IPlaylistDownloadService
 {
-    private readonly IPlaylistService playlistService;
-    private readonly string musicPath;
-    private readonly ILogger<PlaylistDownloadService> logger;
+    private readonly IPlaylistService playlistService = playlistService ?? throw new ArgumentNullException(nameof(playlistService));
+    private readonly string musicPath = configuration["Settings:MusicPath"] ?? throw new InvalidOperationException("Settings:MusicPath não configurado.");
+    private readonly ILogger<PlaylistDownloadService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public PlaylistDownloadService(
-        IPlaylistService playlistService,
-        IConfiguration configuration,
-        ILogger<PlaylistDownloadService> logger)
+    public async Task<DownloadTracksResponse> DownloadTracksAsync(string userId, string playlistId, IEnumerable<int> trackIds)
     {
-        this.playlistService = playlistService ?? throw new ArgumentNullException(nameof(playlistService));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-        musicPath = configuration["Settings:MusicPath"]
-            ?? throw new InvalidOperationException("Settings:MusicPath não configurado.");
-    }
-
-    public async Task<DownloadResult> DownloadTracksAsync(string userId, string playlistId, List<int> trackIds)
-    {
-        if (trackIds == null || trackIds.Count == 0)
+        if (trackIds == null || !trackIds.Any())
             throw new SonarisException("Nenhuma faixa selecionada para download.");
 
-        if (trackIds.Count > 100)
+        if (trackIds.Count() > 100)
             throw new SonarisException("Máximo de 100 faixas por download.");
 
         var playlist = playlistService.GetById(userId, playlistId)
@@ -43,7 +34,7 @@ public class PlaylistDownloadService : IPlaylistDownloadService
         if (selectedTracks.Count == 0)
             throw new SonarisException("Nenhuma faixa válida encontrada para download.");
 
-        var tracksWithFiles = new List<(Domain.DTOs.Playlist.PlaylistTrackDto Track, string FilePath, string FileName)>();
+        var tracksWithFiles = new List<TracksWithFilesDto>();
 
         foreach (var track in selectedTracks)
         {
@@ -64,7 +55,7 @@ public class PlaylistDownloadService : IPlaylistDownloadService
             var originalFileName = Path.GetFileName(track.RelativePath);
             var fileName = FileNameSanitizer.GenerateTrackFileName(track.Title, track.Artist, originalFileName);
 
-            tracksWithFiles.Add((track, absolutePath, fileName));
+            tracksWithFiles.Add(new(track, absolutePath, fileName));
         }
 
         if (tracksWithFiles.Count == 0)
@@ -75,7 +66,7 @@ public class PlaylistDownloadService : IPlaylistDownloadService
             var (track, filePath, fileName) = tracksWithFiles[0];
             var fileBytes = await File.ReadAllBytesAsync(filePath);
 
-            return new DownloadResult
+            return new DownloadTracksResponse
             {
                 FileBytes = fileBytes,
                 FileName = fileName,
@@ -83,12 +74,10 @@ public class PlaylistDownloadService : IPlaylistDownloadService
             };
         }
 
-        return await CreateZipDownload(tracksWithFiles, playlist.Name);
+        return CreateZipDownload(tracksWithFiles, playlist.Name);
     }
 
-    private async Task<DownloadResult> CreateZipDownload(
-        List<(Domain.DTOs.Playlist.PlaylistTrackDto Track, string FilePath, string FileName)> tracks,
-        string playlistName)
+    private static DownloadTracksResponse CreateZipDownload(IEnumerable<TracksWithFilesDto> tracks, string playlistName)
     {
         using var memoryStream = new MemoryStream();
 
@@ -123,7 +112,7 @@ public class PlaylistDownloadService : IPlaylistDownloadService
 
         var sanitizedPlaylistName = FileNameSanitizer.Sanitize(playlistName);
 
-        return new DownloadResult
+        return new DownloadTracksResponse
         {
             FileBytes = zipBytes,
             FileName = $"{sanitizedPlaylistName}.zip",

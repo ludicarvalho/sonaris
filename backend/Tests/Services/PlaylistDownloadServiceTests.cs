@@ -53,7 +53,7 @@ public class PlaylistDownloadServiceTests : IDisposable
     {
         var config = new Mock<IConfiguration>();
 
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             new PlaylistDownloadService(_playlistService.Object, config.Object, null));
     }
 

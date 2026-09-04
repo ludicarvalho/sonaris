@@ -1,13 +1,18 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
-using Sonaris.Controllers;
-using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Download;
+
 using Xunit;
 
+using System.Security.Claims;
+
 namespace Sonaris.Backend.Tests.Controllers;
+
+using Sonaris.Controllers;
+using Sonaris.Domain.DTOs.Download;
+using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Download;
 
 public class DownloadControllerTests
 {
@@ -21,11 +26,11 @@ public class DownloadControllerTests
         _downloadService = new Mock<IPlaylistDownloadService>();
         _controller = new DownloadController(_downloadService.Object);
 
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+        [
             new Claim(ClaimTypes.NameIdentifier, UserId),
             new Claim("sub", UserId)
-        }, "Test"));
+        ], "Test"));
 
         _controller.ControllerContext = new ControllerContext
         {
@@ -45,7 +50,7 @@ public class DownloadControllerTests
         var expectedBytes = new byte[] { 0xFF, 0xFB, 0x90, 0x00 };
         _downloadService
             .Setup(s => s.DownloadTracksAsync(UserId, "playlist-1", new List<int> { 1 }))
-            .ReturnsAsync(new DownloadResult
+            .ReturnsAsync(new DownloadTracksResponse
             {
                 FileBytes = expectedBytes,
                 FileName = "John Lennon - Imagine.mp3",
@@ -65,8 +70,10 @@ public class DownloadControllerTests
     {
         var resultado = await _controller.Download("playlist-1", null);
 
-        var badRequest = Assert.IsType<BadRequestObjectResult>(resultado);
+        var badRequest = Assert.IsType<ObjectResult>(resultado);
         Assert.NotNull(badRequest.Value);
+
+        Assert.True(badRequest.StatusCode == StatusCodes.Status400BadRequest);
     }
 
     [Fact]
@@ -74,8 +81,10 @@ public class DownloadControllerTests
     {
         var resultado = await _controller.Download("playlist-1", new DownloadTracksRequest { TrackIds = [] });
 
-        var badRequest = Assert.IsType<BadRequestObjectResult>(resultado);
+        var badRequest = Assert.IsType<ObjectResult>(resultado);
         Assert.NotNull(badRequest.Value);
+
+        Assert.True(badRequest.StatusCode == StatusCodes.Status400BadRequest);
     }
 
     [Fact]
@@ -87,7 +96,9 @@ public class DownloadControllerTests
 
         var resultado = await _controller.Download("playlist-1", new DownloadTracksRequest { TrackIds = [1] });
 
-        var badRequest = Assert.IsType<BadRequestObjectResult>(resultado);
+        var badRequest = Assert.IsType<ObjectResult>(resultado);
         Assert.NotNull(badRequest.Value);
+
+        Assert.True(badRequest.StatusCode == StatusCodes.Status400BadRequest);
     }
 }

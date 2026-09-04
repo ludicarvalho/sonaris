@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Sonaris.Controllers;
 
+using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
 
 /// <summary>
@@ -33,4 +34,9 @@ public class BaseController : ControllerBase
         else
             return BadRequest(response);
     }
+
+    protected string ObterUsuarioIdAtual()
+        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+           ?? User.FindFirst("sub")?.Value
+           ?? throw new SonarisException("Usuário não identificado.");
 }

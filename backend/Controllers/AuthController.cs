@@ -143,9 +143,4 @@ public class AuthController(IUserService userService, IJwtTokenService jwtTokenS
 
         return Result(response);
     }
-
-    private string ObterUsuarioIdAtual()
-        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-           ?? User.FindFirst("sub")?.Value
-           ?? throw new SonarisException("Usuário não identificado.");
 }

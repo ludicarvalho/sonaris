@@ -62,7 +62,7 @@ public class ArquivoService(IConfiguration configuration) : IArquivoService
                 PageSize = pageSize,
                 TotalCount = all.Count,
                 TotalPages = (int)Math.Ceiling(all.Count / (double)Math.Max(1, pageSize)),
-                Items = all.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList()
+                Items = [.. all.Skip((pageNumber - 1) * pageSize).Take(pageSize)]
             };
 
             return result;

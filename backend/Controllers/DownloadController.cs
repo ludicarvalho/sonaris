@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Sonaris.Controllers;
 
+using Sonaris.Domain.DTOs.Download;
 using Sonaris.Domain.Infrastructure;
+using Sonaris.Domain.Infrastructure.Response;
 using Sonaris.Services.Download;
 
 [Route("api/Playlist")]
@@ -17,7 +19,7 @@ public class DownloadController(IPlaylistDownloadService downloadService) : Base
     {
         try
         {
-            if (request == null || request.TrackIds.Count == 0)
+            if (request == null || !request.TrackIds.Any())
                 throw new SonarisException("Nenhuma faixa selecionada para download.");
 
             var result = await downloadService.DownloadTracksAsync(ObterUsuarioIdAtual(), id, request.TrackIds);
@@ -28,17 +30,9 @@ public class DownloadController(IPlaylistDownloadService downloadService) : Base
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Success = false, Message = ex is SonarisException ? ex.Message : "Erro interno ao processar o download.", ErrorDetails = ex is not SonarisException ? ex.ToString() : null });
+            var response = new BaseResponse<string>();
+            response.MontarErro(ex);
+            return Result(response);
         }
     }
-
-    private string ObterUsuarioIdAtual()
-        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-           ?? User.FindFirst("sub")?.Value
-           ?? throw new SonarisException("Usuário não identificado.");
-}
-
-public class DownloadTracksRequest
-{
-    public List<int> TrackIds { get; set; } = [];
 }
