@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
+import { erroParaMensagem } from '../../services/httpError';
 
 function Login() {
   const { login, user, autenticando } = useAuth();
@@ -24,7 +25,7 @@ function Login() {
     try {
       await login(username, senha);
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha ao entrar.');
+      setErro(await erroParaMensagem(err));
     } finally {
       setEnviando(false);
     }
