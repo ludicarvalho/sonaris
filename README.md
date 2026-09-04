@@ -4,8 +4,8 @@ Aplicação de música para navegar e tocar a sua coleção de MP3. Composta por
 
 ## Stack
 
-- **Backend**: ASP.NET Core 10 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG, extração de capa, edição de metadados e capa (grava ID3 v2.3 com capa em encoding Latin-1 via mutagen), busca full-text FTS5 híbrida (unicode61 + trigram), playlists persistidas em SQLite, autenticação JWT com gestão de usuários e papéis, e scan automático de músicas em background.
-- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca full-text, player com capa, volume, atalhos de teclado, layout responsivo, detalhes expansíveis com edição de metadados e capa, sistema de playlists com criação/renomeação/exclusão/reordenação de faixas, menu lateral compartilhado e página de usuários (gestão de papéis, restrita a admin).
+- **Backend**: ASP.NET Core 10 (Web API) — streaming de áudio com suporte a Range, leitura de metadados ID3v2/MPEG, extração de capa, edição de metadados e capa (grava ID3 v2.3 com capa em encoding Latin-1 via mutagen), busca full-text FTS5 híbrida (unicode61 + trigram), playlists persistidas em SQLite com download das faixas (MP3 individual ou ZIP), autenticação JWT com gestão de usuários e papéis, e scan automático de músicas em background.
+- **Frontend**: React 19 + Vite + TypeScript + TailwindCSS — navegação por pastas, busca full-text, player com capa, volume, atalhos de teclado, layout responsivo, detalhes expansíveis com edição de metadados e capa, sistema de playlists com criação/renomeação/exclusão/reordenação de faixas e download das selecionadas, notificações toast globais, menu lateral compartilhado e página de usuários (gestão de papéis, restrita a admin).
 - **Infra**: Docker Compose (backend + nginx servindo o frontend), SQLite via bind mount.
 
 ## Estrutura
@@ -20,7 +20,8 @@ Sonaris/
 │   ├── Services/Music/    # MusicMetadataReader/Writer (leitura e gravação ID3 via mutagen)
 │   ├── Services/Search/   # Schema FTS5, MusicSearchService, MusicRepository, MusicFileScanner, MusicIndexerBackgroundService
 │   ├── Services/Playlists/# PlaylistService (CRUD + reordenação)
-│   └── Tests/             # Testes unitários (xUnit + Moq) — 147 testes
+│   ├── Services/Download/ # Download das faixas da playlist (MP3/ZIP) + FileNameSanitizer
+│   └── Tests/             # Testes unitários (xUnit + Moq) — 170 testes
 └── frontend/              # React/Vite (músicas, player, playlists e usuários)
 ```
 
@@ -130,8 +131,11 @@ Na primeira execução, uma conta de administrador é criada automaticamente a p
 | Remover faixa    | DELETE | `/api/Playlist/{id}/tracks/{trackId}`         |
 | Reordenar faixa  | PUT    | `/api/Playlist/{id}/tracks/{trackId}/reorder` |
 | Duplicar         | POST   | `/api/Playlist/{id}/duplicate?novoNome=<nome>` |
+| Baixar faixas    | POST   | `/api/Playlist/{id}/download` (body: `{ trackIds }`) |
 
 Cada usuário gerencia suas **próprias** playlists (isoladas por `user_id`). Playlists são referenciadas por `relativePath` — se uma música for renomeada/movida, a referência na playlist quebra (tradeoff aceito).
+
+No download, **1 faixa selecionada** é baixada como **MP3 direto**; **várias** geram um **ZIP**. O nome do arquivo usa os metadados (`Artista - Título.mp3`) quando disponíveis, com fallback para o nome original.
 
 Nomes duplicados são impedidos pelo backend (tanto em criação quanto renomeação).
 
@@ -183,9 +187,10 @@ cd backend
 dotnet test
 ```
 
-147 testes unitários cobrindo: schema FTS5, MusicSearchService, MusicMetadataReader,
+170 testes unitários cobrindo: schema FTS5, MusicSearchService, MusicMetadataReader,
 MusicMetadataWriter, ArquivoService, PlaylistService, PlaylistController, MusicaController,
-UserService, JwtTokenService e AuthController.
+UserService, JwtTokenService, AuthController, DownloadController, FileNameSanitizer e
+PlaylistDownloadService.
 
 ## Lint
 
