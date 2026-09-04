@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, ShieldCheck, UserPlus, X } from 'lucide-react';
 import type { RegistrarUsuarioParams } from '../../../services/usuarios.service';
+import { erroParaMensagem } from '../../../services/httpError';
 
 interface ICriarUsuarioDialog {
     aberto: boolean;
@@ -59,8 +60,8 @@ export function CriarUsuarioDialog({ aberto, onFechar, onCriar }: ICriarUsuarioD
                 IsAdmin: isAdmin,
             });
             onFechar();
-        } catch (err: any) {
-            setErro(err?.response?.data?.Message ?? err?.message ?? 'Não foi possível criar o usuário.');
+        } catch (err) {
+            setErro(await erroParaMensagem(err));
         } finally {
             setSalvando(false);
         }

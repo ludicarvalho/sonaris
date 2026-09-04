@@ -15,6 +15,7 @@ import {
 } from '../../services/usuarios.service';
 import { CriarUsuarioDialog } from './components/CriarUsuarioDialog';
 import { AlterarSenhaDialog } from './components/AlterarSenhaDialog';
+import { erroParaMensagem } from '../../services/httpError';
 
 const botaoIcone =
     "inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-200/70 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors";
@@ -38,8 +39,8 @@ export function Usuarios() {
         try {
             const resposta = await listarUsuarios();
             setUsuarios(resposta.data.Data ?? []);
-        } catch (err: any) {
-            setErro(err?.response?.data?.Message ?? err?.message ?? 'Não foi possível carregar os usuários.');
+        } catch (err) {
+            setErro(await erroParaMensagem(err));
         } finally {
             setLoading(false);
         }
@@ -73,8 +74,8 @@ export function Usuarios() {
             await alterarPapel(usuario.Id, novoPapel);
             setUsuarios(prev => prev.map(u => (u.Id === usuario.Id ? { ...u, IsAdmin: novoPapel } : u)));
             mostrarSucesso(novoPapel ? `${nome} agora é administrador.` : `${nome} deixou de ser administrador.`);
-        } catch (err: any) {
-            setErro(err?.response?.data?.Message ?? err?.message ?? 'Não foi possível alterar o papel.');
+        } catch (err) {
+            setErro(await erroParaMensagem(err));
         } finally {
             setOperando(null);
         }
