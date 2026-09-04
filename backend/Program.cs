@@ -5,6 +5,7 @@ using Scalar.AspNetCore;
 
 using Sonaris.Services.Arquivos;
 using Sonaris.Services.Auth;
+using Sonaris.Services.Download;
 using Sonaris.Services.Music;
 using Sonaris.Services.Playlists;
 using Sonaris.Services.Search;
@@ -68,6 +69,7 @@ builder.Services.AddSingleton<MusicRepository>();
 builder.Services.AddSingleton<MusicFileScanner>();
 builder.Services.Configure<MusicIndexerOptions>(builder.Configuration.GetSection("Settings"));
 builder.Services.AddSingleton<IPlaylistService, PlaylistService>();
+builder.Services.AddSingleton<IPlaylistDownloadService, PlaylistDownloadService>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<IUserService, UserService>();

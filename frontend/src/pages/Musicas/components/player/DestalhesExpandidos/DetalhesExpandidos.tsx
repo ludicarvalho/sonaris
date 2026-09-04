@@ -3,6 +3,7 @@ import { Loader2, Pencil, Save, X } from "lucide-react";
 import { formatarDuracao, formatarTamanho } from "../../../utils";
 import { AddToPlaylistButton } from "../../AddToPlaylistButton";
 import { useAuth } from "../../../../../contexts/useAuth";
+import { erroParaMensagem } from "../../../../../services/httpError";
 import { Capa } from "../Capa";
 import type { EditarMetadadosParams } from "../../../services/musicas.service";
 import type { FileSystemItem, ICamposEdicao, MusicMetadata } from "../../../types";
@@ -58,8 +59,8 @@ export function DetalhesExpandidos({ capaUrl, titulo, artistaAlbum, metadata, tr
                 capa: novaCapa,
             });
             setEditando(false);
-        } catch (err: any) {
-            setErro(err?.response?.data?.Message ?? err?.message ?? "Não foi possível salvar os metadados.");
+        } catch (err) {
+            setErro(await erroParaMensagem(err));
         } finally {
             setSalvando(false);
         }

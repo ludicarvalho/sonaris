@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getMusicas } from '../services/musicas.service';
+import { erroParaMensagem } from '../../../services/httpError';
 import type { FileSystemItem } from '../types';
 
 const PAGE_SIZE = 30;
@@ -34,9 +35,9 @@ export function useFileBrowser(path: string) {
                     setError(Message ?? 'Não foi possível carregar as músicas.');
                 }
             })
-            .catch((err: any) => {
+            .catch(async (err: any) => {
                 if (!active) return;
-                setError(err?.response?.data?.Message ?? err?.message ?? 'Erro ao conectar com o servidor.');
+                setError(await erroParaMensagem(err));
             })
             .finally(() => {
                 if (active) setFetchState('idle');

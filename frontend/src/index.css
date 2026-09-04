@@ -23,6 +23,21 @@ body {
   background-color: #0f172a;
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.15s ease-out;
+}
+
 #root {
   width: 100%;
   min-height: 100vh;

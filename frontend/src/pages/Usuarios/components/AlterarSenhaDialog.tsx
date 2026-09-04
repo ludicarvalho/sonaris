@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { KeyRound, Loader2, X } from 'lucide-react';
 import type { UserDto } from '../../../services/usuarios.service';
+import { erroParaMensagem } from '../../../services/httpError';
 
 interface IAlterarSenhaDialog {
     aberto: boolean;
@@ -44,8 +45,8 @@ export function AlterarSenhaDialog({ aberto, usuario, onFechar, onSalvar }: IAlt
                 await onSalvar(senha);
             }
             onFechar();
-        } catch (err: any) {
-            setErro(err?.response?.data?.Message ?? err?.message ?? 'Não foi possível alterar a senha.');
+        } catch (err) {
+            setErro(await erroParaMensagem(err));
         } finally {
             setSalvando(false);
         }

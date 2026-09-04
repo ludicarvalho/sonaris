@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { GripVertical, ListMusic, Music, Pencil, Trash2, X } from 'lucide-react';
+import { Download, GripVertical, ListMusic, Music, Pencil, Trash2, X } from 'lucide-react';
 import { usePlaylist } from '../../../hooks/usePlaylist';
+import { useToast } from '../../../contexts/useToast';
 import type { FileSystemItem, PlaylistTrack } from '../types';
 import { arquivoDePath } from '../types';
 import { removerExensaoArquivo } from '../../../utils/text';
+import { downloadPlaylistTracks, triggerDownload } from '../services/download.service';
 import { card } from '../styles';
 
 interface IPainelPlaylist {
@@ -13,13 +15,62 @@ interface IPainelPlaylist {
 
 export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
     const { playlistAtiva, setPlaylistAtiva, removerFaixa, renomear, deletar, reordenarFaixa } = usePlaylist();
+    const toast = useToast();
     const [editandoNome, setEditandoNome] = useState(false);
     const [novoNome, setNovoNome] = useState('');
     const [arrastandoId, setArrastandoId] = useState<number | null>(null);
+    const [selecionados, setSelecionados] = useState<Set<number>>(new Set());
+    const [baixando, setBaixando] = useState(false);
 
     if (!playlistAtiva) return null;
 
     const tracks: PlaylistTrack[] = playlistAtiva.Tracks;
+
+    const toggleSelecionado = (trackId: number) => {
+        setSelecionados((prev) => {
+            const next = new Set(prev);
+            if (next.has(trackId)) {
+                next.delete(trackId);
+            } else {
+                next.add(trackId);
+            }
+            return next;
+        });
+    };
+
+    const selecionarTodas = () => {
+        if (selecionados.size === tracks.length && tracks.length > 0) {
+            setSelecionados(new Set());
+        } else {
+            setSelecionados(new Set(tracks.map((t) => t.Id)));
+        }
+    };
+
+    const handleBaixar = async () => {
+        if (baixando) return;
+        const selectedIds = Array.from(selecionados);
+        if (selectedIds.length === 0 || !playlistAtiva) return;
+
+        setBaixando(true);
+        try {
+            const { blob, fileName } = await downloadPlaylistTracks(playlistAtiva.Id, selectedIds);
+
+            if (selectedIds.length === 1) {
+                triggerDownload(blob, fileName);
+            } else {
+                triggerDownload(blob, `${playlistAtiva.Name}.zip`);
+            }
+
+            toast.success('Download iniciado.');
+            setSelecionados(new Set());
+        } catch (error) {
+            const mensagem = error instanceof Error ? error.message : 'Não foi possível concluir o download.';
+            console.error('Erro ao baixar:', error);
+            toast.error(mensagem);
+        } finally {
+            setBaixando(false);
+        }
+    };
 
     const iniciarEdicao = () => {
         setNovoNome(playlistAtiva.Name);
@@ -134,6 +185,18 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
                                     }}
                                     className={`flex items-center gap-2 px-3 py-2 group transition-colors ${arrastandoId === track.Id ? 'opacity-50' : ''} ${isPlaying ? 'bg-blue-50 dark:bg-blue-900/20' : arrastandoId !== null ? 'cursor-grab hover:bg-slate-100 dark:hover:bg-slate-700/60' : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
                                 >
+                                <label
+                                    className="shrink-0 inline-flex items-center cursor-pointer"
+                                    title="Selecionar para download"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selecionados.has(track.Id)}
+                                        onChange={() => toggleSelecionado(track.Id)}
+                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </label>
                                 <span
                                     draggable
                                     onDragStart={(e) => {
@@ -171,6 +234,33 @@ export function PainelPlaylist({ currentTrack, onPlayTrack }: IPainelPlaylist) {
                     </div>
                 )}
             </div>
+
+            {tracks.length > 0 && (
+                <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-t border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <button
+                            onClick={selecionarTodas}
+                            className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        >
+                            {selecionados.size === tracks.length && tracks.length > 0 ? 'Desmarcar todas' : 'Selecionar todas'}
+                        </button>
+                        {selecionados.size > 0 && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
+                                {selecionados.size} selecionada{selecionados.size > 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        onClick={handleBaixar}
+                        disabled={selecionados.size === 0 || baixando}
+                        title="Baixar músicas selecionadas"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Download size={16} />
+                        {baixando ? 'Baixando...' : `Baixar (${selecionados.size})`}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

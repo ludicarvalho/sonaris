@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
+import { erroParaMensagem } from '../../services/httpError';
 
 function Login() {
   const { login, user, autenticando } = useAuth();
@@ -13,7 +14,7 @@ function Login() {
     return <Navigate to="/musicas" replace />;
   }
 
-  const aoEnviar = async (e: FormEvent) => {
+    const aoEnviar = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username || !senha) {
       setErro('Informe usuário e senha.');
@@ -24,7 +25,7 @@ function Login() {
     try {
       await login(username, senha);
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha ao entrar.');
+      setErro(await erroParaMensagem(err));
     } finally {
       setEnviando(false);
     }

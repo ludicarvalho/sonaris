@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { clearAuth, getToken } from './auth.storage';
+import { erroParaMensagem } from './httpError';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -18,14 +19,19 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error?.response?.status === 401) {
       clearAuth();
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
+
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
+    return Promise.reject(new Error(await erroParaMensagem(error)));
   },
 );
 

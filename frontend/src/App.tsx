@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import type { ReactNode } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { useAuth } from './contexts/useAuth';
 import { Musicas } from './pages/Musicas/Musicas';
 import Login from './pages/Login/Login';
@@ -25,35 +26,37 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/musicas"
-              element={
-                <RequireAuth>
-                  <Musicas />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/usuarios"
-              element={
-                <RequireAuth>
-                  <RequireAdmin>
-                    <Usuarios />
-                  </RequireAdmin>
-                </RequireAuth>
-              }
-            />
-            <Route path="/" element={<Navigate to="/musicas" replace />} />
-            <Route path="*" element={<Navigate to="/musicas" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/musicas"
+                element={
+                  <RequireAuth>
+                    <Musicas />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/usuarios"
+                element={
+                  <RequireAuth>
+                    <RequireAdmin>
+                      <Usuarios />
+                    </RequireAdmin>
+                  </RequireAuth>
+                }
+              />
+              <Route path="/" element={<Navigate to="/musicas" replace />} />
+              <Route path="*" element={<Navigate to="/musicas" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </ToastProvider>
   );
 }
 
