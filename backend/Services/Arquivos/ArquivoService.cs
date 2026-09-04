@@ -29,6 +29,7 @@ public class ArquivoService(IConfiguration configuration) : IArquivoService
 
             var directories = directory
                 .EnumerateDirectories()
+                .Where((d) => !d.Attributes.HasFlag(FileAttributes.Hidden) || !d.Name.StartsWith('.'))
                 .Select(d => new FileSystemItemDto(d.FullName)
                 {
                     Name = d.Name,
