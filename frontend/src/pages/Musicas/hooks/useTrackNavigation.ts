@@ -3,20 +3,20 @@ import type { FileSystemItem } from '../types';
 
 export function useTrackNavigation() {
     const [currentTrack, setCurrentTrack] = useState<FileSystemItem | null>(null);
-    const [faixasPlaylist, setFaixasPlaylist] = useState<FileSystemItem[] | null>(null);
+    const [listaAtiva, setListaAtiva] = useState<FileSystemItem[] | null>(null);
 
     const faixaAtualIdx = useCallback(
-        (faixasAtivas: FileSystemItem[]) =>
-            faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath),
+        (faixas: FileSystemItem[]) =>
+            faixas.findIndex(f => f.RelativePath === currentTrack?.RelativePath),
         [currentTrack]
     );
 
     const irParaFaixa = useCallback(
-        (faixasAtivas: FileSystemItem[], delta: number) => {
-            const idx = faixasAtivas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
+        (faixas: FileSystemItem[], delta: number) => {
+            const idx = faixas.findIndex(f => f.RelativePath === currentTrack?.RelativePath);
             const proxima = idx + delta;
-            if (proxima >= 0 && proxima < faixasAtivas.length) {
-                setCurrentTrack(faixasAtivas[proxima]);
+            if (proxima >= 0 && proxima < faixas.length) {
+                setCurrentTrack(faixas[proxima]);
             }
         },
         [currentTrack]
@@ -25,8 +25,8 @@ export function useTrackNavigation() {
     return {
         currentTrack,
         setCurrentTrack,
-        faixasPlaylist,
-        setFaixasPlaylist,
+        listaAtiva,
+        setListaAtiva,
         faixaAtualIdx,
         irParaFaixa,
     };

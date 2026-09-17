@@ -10,7 +10,7 @@ import { AddToPlaylistButton } from './AddToPlaylistButton';
 const DEBOUNCE_MS = 600;
 
 interface IBuscadorMusicas {
-    onSelect: (relativePath: string) => void;
+    onSelect: (resultados: MusicSearchResult[], item: MusicSearchResult) => void;
 }
 
 export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
@@ -86,7 +86,7 @@ export function BuscadorMusicas({ onSelect }: IBuscadorMusicas) {
     }, [termo]);
 
     const aoSelecionar = (item: MusicSearchResult) => {
-        onSelect(item.RelativePath);
+        onSelect(resultados, item);
         limpar();
     };
 

@@ -17,11 +17,24 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
 
     usePlayerKeyboard({ audioRef, hasPrev, hasNext, onPrev, onNext, onClose });
 
+    const tocar = () => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        void audio.play().catch((err) => {
+            console.warn('Falha ao reproduzir:', err?.name ?? err);
+        });
+    };
+
     const alternarPlayPause = () => {
         const audio = audioRef.current;
         if (!audio) return;
-        if (audio.paused) audio.play().catch(() => { });
-        else audio.pause();
+        if (audio.paused) {
+            void audio.play().catch((err) => {
+                console.warn('Falha ao reproduzir:', err?.name ?? err);
+            });
+        } else {
+            audio.pause();
+        }
     };
 
     const pausar = () => {
@@ -32,7 +45,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
     };
 
     const reproduzir = () => {
-        audioRef.current?.play().catch(() => { });
+        tocar();
     };
 
     const retomarAposEdicao = (posicao: number, deveTocar: boolean) => {
@@ -41,7 +54,7 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
 
         const aplicar = () => {
             if (isFinite(posicao)) audio.currentTime = posicao;
-            if (deveTocar) audio.play().catch(() => { });
+            if (deveTocar) tocar();
         };
 
         audio.addEventListener('loadedmetadata', aplicar, { once: true });
@@ -113,10 +126,11 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         const audio = audioRef.current;
         if (!audio) return;
 
+        buscaPendenteRef.current = null;
         audio.src = streamUrl(track.RelativePath);
         audio.volume = volume;
         audio.muted = mudo;
-        audio.play().catch(() => { });
+        tocar();
     }, [track]);
 
     const audioProps = {
@@ -125,8 +139,15 @@ export function usePlayerAudio(track: FileSystemItem, hasPrev: boolean, hasNext:
         onPlay: () => setTocando(true),
         onPause: () => setTocando(false),
         onEnded: () => {
+            buscaPendenteRef.current = null;
             setTocando(false);
             if (hasNext) onNext();
+        },
+        onLoadStart: () => {
+            buscaPendenteRef.current = null;
+        },
+        onError: () => {
+            buscaPendenteRef.current = null;
         },
         onTimeUpdate: atualizarTempo,
         onSeeked: aoConcluirBusca,

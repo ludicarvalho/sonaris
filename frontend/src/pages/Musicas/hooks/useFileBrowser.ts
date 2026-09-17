@@ -100,5 +100,6 @@ export function useFileBrowser(path: string) {
         totalItems,
         error,
         sentinelRef,
+        loadMore,
     };
 }
