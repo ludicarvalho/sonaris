@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Interfaces.Auth;
+namespace Sonaris.Services.Abstractions.Auth;
 
 public interface IPasswordHasher
 {

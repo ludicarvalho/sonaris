@@ -1,8 +1,10 @@
 using Microsoft.Data.Sqlite;
-using Sonaris.Services.Search;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Services.Implementations.Search;
 
 public class DatabaseSchemaTests : TestesBase
 {

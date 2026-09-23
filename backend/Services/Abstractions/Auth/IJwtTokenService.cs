@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Sonaris.Services.Interfaces.Auth;
+namespace Sonaris.Services.Abstractions.Auth;
 
 using Sonaris.Domain.DTOs.Auth;
 

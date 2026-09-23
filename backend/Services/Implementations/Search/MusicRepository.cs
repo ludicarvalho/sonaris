@@ -1,8 +1,11 @@
 using System.Text.Json;
-using Microsoft.Data.Sqlite;
-using Sonaris.Domain.Entities;
 
-namespace Sonaris.Services.Search;
+using Microsoft.Data.Sqlite;
+
+namespace Sonaris.Services.Implementations.Search;
+
+using Sonaris.Domain.Entities;
+using Sonaris.Services.Abstractions.Search;
 
 public class MusicRepository
 {

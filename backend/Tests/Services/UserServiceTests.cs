@@ -1,12 +1,15 @@
 using Microsoft.Extensions.Configuration;
+
 using Moq;
-using Sonaris.Domain.DTOs.Auth;
-using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Implementations.Auth;
-using Sonaris.Services.Search;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Domain.DTOs.Auth;
+using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Implementations.Auth;
+using Sonaris.Services.Implementations.Search;
 
 public class UserServiceTests : TestesBase
 {

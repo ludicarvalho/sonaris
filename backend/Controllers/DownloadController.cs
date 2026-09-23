@@ -6,7 +6,7 @@ namespace Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Download;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces.Download;
+using Sonaris.Services.Abstractions.Download;
 
 [Route("api/Playlist")]
 [Authorize]

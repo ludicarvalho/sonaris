@@ -1,15 +1,18 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
-using Sonaris.Controllers;
-using Sonaris.Domain.DTOs.Playlist;
-using Sonaris.Domain.Infrastructure;
-using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces;
+
+using System.Security.Claims;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Controllers;
+
+using Sonaris.Controllers;
+using Sonaris.Domain.DTOs.Playlist;
+using Sonaris.Domain.Infrastructure.Response;
+using Sonaris.Services.Abstractions;
 
 public class PlaylistControllerTests
 {

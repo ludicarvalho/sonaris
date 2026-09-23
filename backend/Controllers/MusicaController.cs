@@ -7,9 +7,9 @@ using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces;
-using Sonaris.Services.Interfaces.Music;
-using Sonaris.Services.Search;
+using Sonaris.Services.Abstractions.Music;
+using Sonaris.Services.Abstractions;
+using Sonaris.Services.Abstractions.Search;
 
 [Route("api/Musica/[action]")]
 [Authorize]

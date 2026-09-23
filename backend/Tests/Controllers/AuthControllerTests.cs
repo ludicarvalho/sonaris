@@ -1,14 +1,16 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
+
+using Xunit;
+
+namespace Sonaris.Backend.Tests.Controllers;
+
 using Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Auth;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces.Auth;
-using Xunit;
-
-namespace Sonaris.Backend.Tests.Controllers;
+using Sonaris.Services.Abstractions.Auth;
 
 public class AuthControllerTests
 {

@@ -1,10 +1,12 @@
 using Microsoft.Data.Sqlite;
+
 using System.Text.RegularExpressions;
 
-namespace Sonaris.Services.Search;
+namespace Sonaris.Services.Implementations.Search;
 
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure.Paging;
+using Sonaris.Services.Abstractions.Search;
 
 public class MusicSearchService : IMusicSearchService
 {
@@ -98,13 +100,13 @@ public class MusicSearchService : IMusicSearchService
             PageSize = pageSize,
             TotalCount = totalCount,
             TotalPages = (int)Math.Ceiling(totalCount / (double)Math.Max(1, pageSize)),
-            Items = results
+            Items = [.. results]
         };
     }
 
-    private static List<MusicSearchResult> ReadSearchResults(SqliteCommand command)
+    private static IEnumerable<MusicSearchResult> ReadSearchResults(SqliteCommand command)
     {
-        var results = new List<MusicSearchResult>();
+        IList<MusicSearchResult> results = [];
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())

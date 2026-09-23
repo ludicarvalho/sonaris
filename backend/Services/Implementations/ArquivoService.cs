@@ -3,7 +3,7 @@ namespace Sonaris.Services.Implementations;
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Paging;
-using Sonaris.Services.Interfaces;
+using Sonaris.Services.Abstractions;
 
 public class ArquivoService(IConfiguration configuration) : IArquivoService
 {

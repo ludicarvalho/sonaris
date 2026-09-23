@@ -1,12 +1,15 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+
 using Moq;
-using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Implementations;
-using Sonaris.Services.Search;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Implementations;
+using Sonaris.Services.Implementations.Search;
 
 public class PlaylistServiceTests : TestesBase, IDisposable
 {

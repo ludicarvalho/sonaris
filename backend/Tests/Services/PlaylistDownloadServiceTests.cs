@@ -1,13 +1,16 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Sonaris.Domain.DTOs.Playlist;
-using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Implementations.Download;
-using Sonaris.Services.Interfaces;
+
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
+
+using Sonaris.Domain.DTOs.Playlist;
+using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Abstractions;
+using Sonaris.Services.Implementations.Download;
 
 public class PlaylistDownloadServiceTests : IDisposable
 {

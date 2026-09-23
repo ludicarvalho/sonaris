@@ -1,6 +1,6 @@
 using Microsoft.Data.Sqlite;
 
-namespace Sonaris.Services.Search;
+namespace Sonaris.Services.Implementations.Search;
 
 public static class DatabaseSchema
 {

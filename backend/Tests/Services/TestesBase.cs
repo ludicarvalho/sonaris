@@ -5,7 +5,7 @@ using Moq;
 
 namespace Sonaris.Backend.Tests.Services;
 
-using Sonaris.Services.Search;
+using Sonaris.Services.Implementations.Search;
 
 public abstract class TestesBase : IDisposable
 {

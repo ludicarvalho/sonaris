@@ -1,5 +1,3 @@
-using System.Threading;
-
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
@@ -9,7 +7,7 @@ using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-using Sonaris.Services.Search;
+using Sonaris.Services.Implementations.Search;
 
 public class MusicSearchServiceTests : TestesBase, IDisposable
 {

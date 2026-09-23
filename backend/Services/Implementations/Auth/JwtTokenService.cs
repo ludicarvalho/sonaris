@@ -7,7 +7,7 @@ using System.Text;
 namespace Sonaris.Services.Implementations.Auth;
 
 using Sonaris.Domain.DTOs.Auth;
-using Sonaris.Services.Interfaces.Auth;
+using Sonaris.Services.Abstractions.Auth;
 
 public class JwtTokenService : IJwtTokenService
 {

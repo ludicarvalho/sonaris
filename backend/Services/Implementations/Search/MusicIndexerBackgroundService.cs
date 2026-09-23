@@ -1,29 +1,20 @@
 using Microsoft.Extensions.Options;
 
-namespace Sonaris.Services.Search;
+namespace Sonaris.Services.Implementations.Search;
 
-public class MusicIndexerBackgroundService : BackgroundService
+public class MusicIndexerBackgroundService(
+      MusicFileScanner scanner
+    , MusicRepository repository
+    , IOptions<MusicIndexerOptions> options
+    , ILogger<MusicIndexerBackgroundService> logger)
+    : BackgroundService
 {
-    private readonly MusicFileScanner _scanner;
-    private readonly MusicRepository _repository;
-    private readonly ILogger<MusicIndexerBackgroundService> _logger;
-    private readonly TimeSpan _initialDelay;
-    private readonly TimeSpan _rescanInterval;
-    private readonly string _musicPath;
-
-    public MusicIndexerBackgroundService(
-        MusicFileScanner scanner,
-        MusicRepository repository,
-        IOptions<MusicIndexerOptions> options,
-        ILogger<MusicIndexerBackgroundService> logger)
-    {
-        _scanner = scanner;
-        _repository = repository;
-        _logger = logger;
-        _initialDelay = TimeSpan.FromSeconds(options.Value.InitialDelaySeconds);
-        _rescanInterval = TimeSpan.FromMinutes(options.Value.RescanIntervalMinutes);
-        _musicPath = options.Value.MusicPath;
-    }
+    private readonly MusicFileScanner _scanner = scanner;
+    private readonly MusicRepository _repository = repository;
+    private readonly ILogger<MusicIndexerBackgroundService> _logger = logger;
+    private readonly TimeSpan _initialDelay = TimeSpan.FromSeconds(options.Value.InitialDelaySeconds);
+    private readonly TimeSpan _rescanInterval = TimeSpan.FromMinutes(options.Value.RescanIntervalMinutes);
+    private readonly string _musicPath = options.Value.MusicPath;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

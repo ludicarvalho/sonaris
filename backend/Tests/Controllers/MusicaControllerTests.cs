@@ -1,20 +1,24 @@
-namespace Sonaris.Backend.Tests.Controllers;
-
-using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+
 using Moq;
+
+using System.Reflection;
+
+using Xunit;
+
+namespace Sonaris.Backend.Tests.Controllers;
+
 using Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Paging;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces;
-using Sonaris.Services.Interfaces.Music;
-using Sonaris.Services.Search;
-using Xunit;
+using Sonaris.Services.Abstractions;
+using Sonaris.Services.Abstractions.Music;
+using Sonaris.Services.Abstractions.Search;
 
 public class MusicaControllerTests : IDisposable
 {

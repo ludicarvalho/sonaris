@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Interfaces.Download;
+namespace Sonaris.Services.Abstractions.Download;
 
 using Sonaris.Domain.DTOs.Download;
 

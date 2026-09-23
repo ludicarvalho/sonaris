@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Interfaces;
+namespace Sonaris.Services.Abstractions;
 
 using Sonaris.Domain.DTOs.Playlist;
 

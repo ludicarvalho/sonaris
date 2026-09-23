@@ -4,7 +4,7 @@ namespace Sonaris.Services.Implementations.Auth;
 
 using Sonaris.Domain.DTOs.Auth;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Interfaces.Auth;
+using Sonaris.Services.Abstractions.Auth;
 
 public class UserService : IUserService
 {

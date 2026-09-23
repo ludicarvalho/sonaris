@@ -1,18 +1,12 @@
+namespace Sonaris.Services.Implementations.Search;
+
 using Sonaris.Domain.Entities;
-using Sonaris.Services.Interfaces.Music;
+using Sonaris.Services.Abstractions.Music;
 
-namespace Sonaris.Services.Search;
-
-public class MusicFileScanner
+public class MusicFileScanner(IMusicMetadataReader metadataReader, ILogger<MusicFileScanner> logger)
 {
-    private readonly IMusicMetadataReader _metadataReader;
-    private readonly ILogger<MusicFileScanner> _logger;
-
-    public MusicFileScanner(IMusicMetadataReader metadataReader, ILogger<MusicFileScanner> logger)
-    {
-        _metadataReader = metadataReader;
-        _logger = logger;
-    }
+    private readonly IMusicMetadataReader _metadataReader = metadataReader;
+    private readonly ILogger<MusicFileScanner> _logger = logger;
 
     public List<MusicFileEntry> Scan(string musicPath)
     {

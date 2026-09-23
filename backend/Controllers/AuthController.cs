@@ -6,7 +6,7 @@ namespace Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Auth;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Interfaces.Auth;
+using Sonaris.Services.Abstractions.Auth;
 
 [Route("api/Auth")]
 public class AuthController(IUserService userService, IJwtTokenService jwtTokenService) : BaseController

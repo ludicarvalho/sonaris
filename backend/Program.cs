@@ -1,16 +1,20 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+
 using Scalar.AspNetCore;
+
+using System.Text;
+
+using Sonaris.Services.Abstractions;
+using Sonaris.Services.Abstractions.Auth;
+using Sonaris.Services.Abstractions.Download;
+using Sonaris.Services.Abstractions.Music;
+using Sonaris.Services.Abstractions.Search;
 using Sonaris.Services.Implementations;
 using Sonaris.Services.Implementations.Auth;
 using Sonaris.Services.Implementations.Download;
 using Sonaris.Services.Implementations.Music;
-using Sonaris.Services.Interfaces;
-using Sonaris.Services.Interfaces.Auth;
-using Sonaris.Services.Interfaces.Download;
-using Sonaris.Services.Interfaces.Music;
-using Sonaris.Services.Search;
+using Sonaris.Services.Implementations.Search;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,11 +61,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization((options) =>
-{
-    options.AddPolicy("AdminOnly", (policy) =>
-        policy.RequireRole("Admin"));
-});
+builder.Services.AddAuthorization((options) => options.AddPolicy("AdminOnly", (policy) => policy.RequireRole("Admin")));
 
 builder.Services.AddSingleton<IArquivoService, ArquivoService>();
 builder.Services.AddSingleton<IMusicMetadataReader, MusicMetadataReader>();

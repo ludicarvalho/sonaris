@@ -4,8 +4,8 @@ namespace Sonaris.Services.Implementations;
 
 using Sonaris.Domain.DTOs.Playlist;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Interfaces;
-using Sonaris.Services.Search;
+using Sonaris.Services.Abstractions;
+using Sonaris.Services.Implementations.Search;
 
 public class PlaylistService : IPlaylistService
 {

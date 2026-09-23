@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Interfaces.Music;
+namespace Sonaris.Services.Abstractions.Music;
 
 using Sonaris.Domain.DTOs.Music;
 

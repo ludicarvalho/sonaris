@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Search;
+namespace Sonaris.Services.Implementations.Search;
 
 public class MusicIndexerOptions
 {
