@@ -1,5 +1,5 @@
 using Sonaris.Domain.Entities;
-using Sonaris.Services.Music;
+using Sonaris.Services.Interfaces.Music;
 
 namespace Sonaris.Services.Search;
 

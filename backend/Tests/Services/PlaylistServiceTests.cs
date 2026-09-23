@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Implementations;
 using Sonaris.Services.Search;
 using Xunit;
 
@@ -42,8 +42,8 @@ public class PlaylistServiceTests : TestesBase, IDisposable
 
         var all = _service.GetAll(UserId);
         Assert.Single(all);
-        Assert.Equal(created.Id, all[0].Id);
-        Assert.Equal("Rock", all[0].Name);
+        Assert.Equal(created.Id, all.FirstOrDefault().Id);
+        Assert.Equal("Rock", all.FirstOrDefault().Name);
     }
 
     [Fact]
@@ -55,10 +55,10 @@ public class PlaylistServiceTests : TestesBase, IDisposable
 
         var all = _service.GetAll(UserId);
 
-        Assert.Equal(3, all.Count);
-        Assert.Equal("Alpha", all[0].Name);
-        Assert.Equal("Beta", all[1].Name);
-        Assert.Equal("Zebra", all[2].Name);
+        Assert.Equal(3, all.Count());
+        Assert.Equal("Alpha", all.ElementAt(0).Name);
+        Assert.Equal("Beta", all.ElementAt(1).Name);
+        Assert.Equal("Zebra", all.ElementAt(2).Name);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
         var all = _service.GetAll(UserId);
 
         Assert.Single(all);
-        Assert.Equal(2, all[0].Tracks.Count);
+        Assert.Equal(2, all.FirstOrDefault().Tracks.Count);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     {
         var playlist = _service.Create(UserId, "Com Faixas");
         var track1 = _service.AddTrack(UserId, playlist.Id, "musica1.mp3");
-        var track2 = _service.AddTrack(UserId, playlist.Id, "musica2.mp3");
+        _ = _service.AddTrack(UserId, playlist.Id, "musica2.mp3");
 
         _service.RemoveTrack(UserId, playlist.Id, track1.Id);
 
@@ -297,7 +297,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
     public void ReorderTrack_AlteraPosicaoDaFaixa()
     {
         var playlist = _service.Create(UserId, "Reorder");
-        var track1 = _service.AddTrack(UserId, playlist.Id, "a.mp3");
+        _ = _service.AddTrack(UserId, playlist.Id, "a.mp3");
         var track2 = _service.AddTrack(UserId, playlist.Id, "b.mp3");
 
         _service.ReorderTrack(UserId, playlist.Id, track2.Id, 99);
@@ -325,7 +325,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
         Assert.Equal(track3.Id, result[0].Id);
         Assert.Equal(track1.Id, result[1].Id);
         Assert.Equal(track2.Id, result[2].Id);
-        Assert.Equal(new[] { 0, 1, 2 }, result.Select(t => t.Position).ToArray());
+        Assert.Equal([0, 1, 2], [.. result.Select(t => t.Position)]);
     }
 
     [Fact]
@@ -342,7 +342,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
         Assert.Equal(track2.Id, result[0].Id);
         Assert.Equal(track3.Id, result[1].Id);
         Assert.Equal(track1.Id, result[2].Id);
-        Assert.Equal(new[] { 0, 1, 2 }, result.Select(t => t.Position).ToArray());
+        Assert.Equal([0, 1, 2], [.. result.Select(t => t.Position)]);
     }
 
     [Fact]
@@ -369,7 +369,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
         _service.Duplicate(UserId, original.Id, "Cópia");
 
         var all = _service.GetAll(UserId);
-        Assert.Equal(2, all.Count);
+        Assert.Equal(2, all.Count());
 
         var copia = all.First(p => p.Name == "Cópia");
         Assert.NotNull(copia);
@@ -392,7 +392,7 @@ public class PlaylistServiceTests : TestesBase, IDisposable
 
         var all = _service.GetAll(UserId);
 
-        Assert.Equal(2, all.Count);
+        Assert.Equal(2, all.Count());
         Assert.All(all, p => Assert.Empty(p.Tracks));
     }
 

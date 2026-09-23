@@ -1,10 +1,11 @@
-namespace Sonaris.Services.Music;
+namespace Sonaris.Services.Implementations.Music;
 
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.DTOs.Music.Metadata.Models;
 using Sonaris.Domain.DTOs.Music.Metadata.Parsers;
 using Sonaris.Domain.DTOs.Music.Metadata.Readers;
 using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Interfaces.Music;
 
 /// <summary>
 /// Lê os metadados ID3v2 (v2.3/v2.4) e MPEG de uma música MP3 via FileStream incremental.

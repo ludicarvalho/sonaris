@@ -1,10 +1,12 @@
 using System.IO.Compression;
 
-namespace Sonaris.Services.Download;
+namespace Sonaris.Services.Implementations.Download;
 
 using Sonaris.Domain.DTOs.Download;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Download;
+using Sonaris.Services.Interfaces;
+using Sonaris.Services.Interfaces.Download;
 
 public class PlaylistDownloadService(
       IPlaylistService playlistService

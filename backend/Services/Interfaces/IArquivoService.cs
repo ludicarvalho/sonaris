@@ -1,4 +1,4 @@
-namespace Sonaris.Services.Arquivos;
+namespace Sonaris.Services.Interfaces;
 
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.Infrastructure.Paging;

@@ -1,9 +1,10 @@
 using Microsoft.Data.Sqlite;
-using Sonaris.Domain.DTOs.Auth;
-using Sonaris.Domain.Entities;
-using Sonaris.Domain.Infrastructure;
 
-namespace Sonaris.Services.Auth;
+namespace Sonaris.Services.Implementations.Auth;
+
+using Sonaris.Domain.DTOs.Auth;
+using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Interfaces.Auth;
 
 public class UserService : IUserService
 {

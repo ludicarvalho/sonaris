@@ -1,10 +1,10 @@
-namespace Sonaris.Services.Playlists;
+namespace Sonaris.Services.Interfaces;
 
 using Sonaris.Domain.DTOs.Playlist;
 
 public interface IPlaylistService
 {
-    List<PlaylistDto> GetAll(string userId);
+    IEnumerable<PlaylistDto> GetAll(string userId);
     PlaylistDto GetById(string userId, string id);
     PlaylistDto Create(string userId, string name);
     PlaylistDto Rename(string userId, string id, string name);

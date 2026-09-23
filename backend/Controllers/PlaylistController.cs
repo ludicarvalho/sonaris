@@ -6,7 +6,7 @@ namespace Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Playlist;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Interfaces;
 
 [Route("api/Playlist")]
 [Authorize]

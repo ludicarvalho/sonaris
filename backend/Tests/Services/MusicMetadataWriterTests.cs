@@ -1,5 +1,5 @@
 using Sonaris.Domain.DTOs.Music;
-using Sonaris.Services.Music;
+using Sonaris.Services.Implementations.Music;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;

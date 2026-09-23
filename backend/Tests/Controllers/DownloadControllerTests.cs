@@ -12,7 +12,7 @@ namespace Sonaris.Backend.Tests.Controllers;
 using Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Download;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Download;
+using Sonaris.Services.Interfaces.Download;
 
 public class DownloadControllerTests
 {

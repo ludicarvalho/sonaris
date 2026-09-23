@@ -7,7 +7,7 @@ using Xunit;
 namespace Sonaris.Backend.Tests.Services;
 
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Arquivos;
+using Sonaris.Services.Implementations;
 
 public class ArquivoServiceTests : IDisposable
 {

@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Sonaris.Domain.DTOs.Playlist;
 using Sonaris.Domain.Infrastructure;
-using Sonaris.Services.Download;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Implementations.Download;
+using Sonaris.Services.Interfaces;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;

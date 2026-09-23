@@ -1,6 +1,7 @@
+using Sonaris.Services.Interfaces.Auth;
 using System.Security.Cryptography;
 
-namespace Sonaris.Services.Auth;
+namespace Sonaris.Services.Implementations.Auth;
 
 /// <summary>
 /// Gera e verifica hash de senha usando PBKDF2 (Rfc2898DeriveBytes) com salt

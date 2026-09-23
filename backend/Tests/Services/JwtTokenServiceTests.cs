@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Sonaris.Domain.DTOs.Auth;
-using Sonaris.Services.Auth;
+using Sonaris.Services.Implementations.Auth;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;

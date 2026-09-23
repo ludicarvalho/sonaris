@@ -2,12 +2,14 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-
-using Sonaris.Services.Arquivos;
-using Sonaris.Services.Auth;
-using Sonaris.Services.Download;
-using Sonaris.Services.Music;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Implementations;
+using Sonaris.Services.Implementations.Auth;
+using Sonaris.Services.Implementations.Download;
+using Sonaris.Services.Implementations.Music;
+using Sonaris.Services.Interfaces;
+using Sonaris.Services.Interfaces.Auth;
+using Sonaris.Services.Interfaces.Download;
+using Sonaris.Services.Interfaces.Music;
 using Sonaris.Services.Search;
 
 var builder = WebApplication.CreateBuilder(args);

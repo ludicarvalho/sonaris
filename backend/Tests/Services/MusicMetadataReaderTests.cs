@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Sonaris.Backend.Tests.Services;
 
-using Sonaris.Services.Music;
+using Sonaris.Services.Implementations.Music;
 
 public class MusicMetadataReaderTests : TestesBase
 {

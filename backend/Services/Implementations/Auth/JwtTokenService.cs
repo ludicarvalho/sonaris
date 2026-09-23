@@ -1,16 +1,13 @@
+using Microsoft.IdentityModel.Tokens;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
+
+namespace Sonaris.Services.Implementations.Auth;
+
 using Sonaris.Domain.DTOs.Auth;
-
-namespace Sonaris.Services.Auth;
-
-public interface IJwtTokenService
-{
-    string GerarToken(UserDto user);
-    ClaimsPrincipal ValidarToken(string token);
-}
+using Sonaris.Services.Interfaces.Auth;
 
 public class JwtTokenService : IJwtTokenService
 {

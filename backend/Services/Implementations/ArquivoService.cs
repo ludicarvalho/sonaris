@@ -1,8 +1,9 @@
-namespace Sonaris.Services.Arquivos;
+namespace Sonaris.Services.Implementations;
 
 using Sonaris.Domain.DTOs.Infrastructure;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Paging;
+using Sonaris.Services.Interfaces;
 
 public class ArquivoService(IConfiguration configuration) : IArquivoService
 {

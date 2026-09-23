@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace Sonaris.Services.Music;
+namespace Sonaris.Services.Implementations.Music;
 
 using Sonaris.Domain.DTOs.Music;
 using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Interfaces.Music;
 
 /// <summary>
 /// Grava metadados ID3 e capa (APIC) em arquivos MP3 via mutagen (Python).

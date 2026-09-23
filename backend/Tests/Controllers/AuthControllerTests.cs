@@ -5,7 +5,7 @@ using Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Auth;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Auth;
+using Sonaris.Services.Interfaces.Auth;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Controllers;

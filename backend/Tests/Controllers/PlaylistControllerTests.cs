@@ -6,7 +6,7 @@ using Sonaris.Controllers;
 using Sonaris.Domain.DTOs.Playlist;
 using Sonaris.Domain.Infrastructure;
 using Sonaris.Domain.Infrastructure.Response;
-using Sonaris.Services.Playlists;
+using Sonaris.Services.Interfaces;
 using Xunit;
 
 namespace Sonaris.Backend.Tests.Controllers;

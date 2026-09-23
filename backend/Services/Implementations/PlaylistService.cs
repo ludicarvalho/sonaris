@@ -1,9 +1,10 @@
 using Microsoft.Data.Sqlite;
 
-namespace Sonaris.Services.Playlists;
+namespace Sonaris.Services.Implementations;
 
 using Sonaris.Domain.DTOs.Playlist;
 using Sonaris.Domain.Infrastructure;
+using Sonaris.Services.Interfaces;
 using Sonaris.Services.Search;
 
 public class PlaylistService : IPlaylistService
@@ -18,7 +19,7 @@ public class PlaylistService : IPlaylistService
         DatabaseSchema.EnsureCreated(_connectionString);
     }
 
-    public List<PlaylistDto> GetAll(string userId)
+    public IEnumerable<PlaylistDto> GetAll(string userId)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
@@ -313,8 +314,7 @@ public class PlaylistService : IPlaylistService
 
     public void Duplicate(string userId, string id, string newName)
     {
-        var original = GetById(userId, id);
-        if (original == null) throw new SonarisException("Playlist não encontrada.");
+        var original = GetById(userId, id) ?? throw new SonarisException("Playlist não encontrada.");
 
         var newPlaylist = Create(userId, newName);
 
@@ -339,7 +339,7 @@ public class PlaylistService : IPlaylistService
         }
     }
 
-    private static List<PlaylistTrackDto> GetTracks(SqliteConnection connection, string playlistId)
+    private static IEnumerable<PlaylistTrackDto> GetTracks(SqliteConnection connection, string playlistId)
     {
         var cmd = connection.CreateCommand();
         cmd.CommandText = """
@@ -350,7 +350,8 @@ public class PlaylistService : IPlaylistService
             """;
         cmd.Parameters.AddWithValue("@playlistId", playlistId);
 
-        var tracks = new List<PlaylistTrackDto>();
+        IList<PlaylistTrackDto> tracks = [];
+
         using (var reader = cmd.ExecuteReader())
         {
             while (reader.Read())

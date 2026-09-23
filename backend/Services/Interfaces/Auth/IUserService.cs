@@ -1,6 +1,6 @@
 using Sonaris.Domain.DTOs.Auth;
 
-namespace Sonaris.Services.Auth;
+namespace Sonaris.Services.Interfaces.Auth;
 
 public interface IUserService
 {
