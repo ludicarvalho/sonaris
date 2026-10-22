@@ -94,30 +94,39 @@ export function AppShell({ titulo, subtitulo, icone, acoes, sidebarExtra, childr
                         </button>
                     </div>
 
-                    <nav className="px-3 py-3 space-y-1">
-                        <button
-                            onClick={() => irPara('/musicas')}
-                            className={`${navItemBase} ${pathname === '/musicas' ? navItemAtivo : navItemInativo}`}
-                        >
-                            <Music4 size={16} />
-                            Músicas
-                        </button>
-                        {isAdmin && (
-                            <button
-                                onClick={() => irPara('/usuarios')}
-                                className={`${navItemBase} ${pathname === '/usuarios' ? navItemAtivo : navItemInativo}`}
-                            >
-                                <Users size={16} />
-                                Usuários
-                            </button>
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                        {sidebarExtra && (
+                            <div className="border-t border-slate-100 dark:border-slate-700">
+                                {sidebarExtra(fechar)}
+                            </div>
                         )}
-                    </nav>
 
-                    {sidebarExtra && (
-                        <div className="flex-1 min-h-0 overflow-y-auto border-t border-slate-100 dark:border-slate-700">
-                            {sidebarExtra(fechar)}
+                        <div className="border-t border-slate-100 dark:border-slate-700">
+                            <div className="px-4 pt-3 pb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    Sistema
+                                </span>
+                            </div>
+                            <nav className="px-3 pb-3 space-y-1">
+                                <button
+                                    onClick={() => irPara('/musicas')}
+                                    className={`${navItemBase} ${pathname === '/musicas' ? navItemAtivo : navItemInativo}`}
+                                >
+                                    <Music4 size={16} />
+                                    Músicas
+                                </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => irPara('/usuarios')}
+                                        className={`${navItemBase} ${pathname === '/usuarios' ? navItemAtivo : navItemInativo}`}
+                                    >
+                                        <Users size={16} />
+                                        Usuários
+                                    </button>
+                                )}
+                            </nav>
                         </div>
-                    )}
+                    </div>
 
                     <div className="mt-auto border-t border-slate-100 dark:border-slate-700 px-3 py-3">
                         <div className="flex items-center gap-2">
